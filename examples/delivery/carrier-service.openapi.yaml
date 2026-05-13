@@ -1,11 +1,11 @@
 openapi: 3.0.3
 info:
-  title: Shipping & Delivery Service API
+  title: Carrier Integration Service API
   description: Carrier management, shipment tracking, and delivery operations
   version: 2.0.3
   contact:
-    name: Logistics Squad
-    email: logistics@acme-retail.internal
+    name: Carrier Platform Team
+    email: carrier-platform@acme-logistics.internal
 
 paths:
   /api/v1/shipments:

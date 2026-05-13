@@ -9,7 +9,7 @@ from ddd_archaeology.phases.compare import compare_entities, _deserialize_entiti
 from ddd_archaeology.output.writer import _to_serializable
 
 
-EXAMPLES_DIR = Path(__file__).parent.parent / "examples" / "ecommerce"
+EXAMPLES_DIR = Path(__file__).parent.parent / "examples" / "delivery"
 
 
 def _get_entities():
@@ -68,7 +68,7 @@ def test_person_concept_has_canonical_owner():
     result = compare_entities(_get_entities())
     assert result.person_concept_drift is not None
     assert result.person_concept_drift.canonical_owner != ""
-    assert "Customer" in result.person_concept_drift.canonical_owner
+    assert "Consignee" in result.person_concept_drift.canonical_owner
 
 
 def test_vocabulary_reports_exist():

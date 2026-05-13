@@ -1,5 +1,5 @@
-# Storefront BFF (Backend for Frontend) — GraphQL Schema
-# Used by the web and mobile apps
+# Tracking Portal BFF (Backend for Frontend) — GraphQL Schema
+# Used by the customer-facing tracking web and mobile apps
 # Owned by: Frontend Platform Team
 
 type Query {

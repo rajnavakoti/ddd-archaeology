@@ -9,7 +9,7 @@ from ddd_archaeology.phases.discover_entities import discover_entities
 from ddd_archaeology.output.writer import _to_serializable
 
 
-EXAMPLES_DIR = Path(__file__).parent.parent / "examples" / "ecommerce"
+EXAMPLES_DIR = Path(__file__).parent.parent / "examples" / "delivery"
 
 
 def _get_inventory() -> list[dict]:
@@ -24,7 +24,7 @@ def test_discovers_entities():
 
 def test_finds_order_as_aggregate_root():
     entities = discover_entities(_get_inventory())
-    orders = [e for e in entities if e.name == "Order" and "Order Service" in e.owning_service]
+    orders = [e for e in entities if e.name == "Order" and "Shipment Service" in e.owning_service]
     assert len(orders) == 1
     assert orders[0].entity_type == EntityType.AGGREGATE_ROOT
 
@@ -60,7 +60,7 @@ def test_cross_references_populated():
 
 def test_graphql_entities_discovered():
     entities = discover_entities(_get_inventory())
-    gql_entities = [e for e in entities if "Storefront" in e.owning_service]
+    gql_entities = [e for e in entities if "Tracking Portal" in e.owning_service]
     assert len(gql_entities) > 5
     # GraphQL types with 'id' should be classified as Entity
     entity_types = [e for e in gql_entities if e.entity_type == EntityType.ENTITY]

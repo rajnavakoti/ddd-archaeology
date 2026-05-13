@@ -1,11 +1,11 @@
 openapi: 3.0.3
 info:
-  title: Customer Service API
-  description: Customer profiles, preferences, and account management
+  title: Consignee Service API
+  description: Consignee profiles, delivery preferences, and account management
   version: 3.1.0
   contact:
-    name: Customer Experience Team
-    email: cx-team@acme-retail.internal
+    name: Customer Domain Team
+    email: customer-domain@acme-logistics.internal
 
 paths:
   /api/v1/customers:
