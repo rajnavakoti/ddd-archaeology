@@ -21,10 +21,12 @@ This process can be applied manually by an architect, automated via scripts (Pha
 3. Record: service name, owning team, version, contract type, endpoint/channel/operation count, schema count
 
 **Thought process:**
-- Which services are on higher API versions? (v2, v3 = more redesigns = more churn = potential complexity hotspot)
+- Which services have broken backward compatibility? (URL path version v2+ = something changed structurally enough that callers couldn't just upgrade. Worth investigating what changed — don't assume it means "major domain redesign," it could be a schema break, migration, or convention change. The signal is "something significant happened here")
 - Which services have the most schemas? (More schemas ≠ more complex domain, but it's a signal)
-- Are there services without contracts? (Undocumented services = hidden dependencies)
+- Are there services without contracts? (Undocumented services = hidden dependencies. **Important limitation:** contract archaeology can only analyze what's documented. Services communicating through shared databases, internal calls, or undocumented queues are invisible to this technique — flag them for follow-up with database forensics or log mining)
 - What mix of contract types do we see? (REST-only = request-driven architecture. Events present = some event-driven patterns exist)
+- **HTTP method distribution:** If a service exposes only `GET` endpoints — no `POST`, `PUT`, `PATCH`, `DELETE` — it's a read model or projection, not a domain service. It likely has no aggregate roots, only queries. This is infrastructure (reporting, search, analytics), not a bounded context candidate. Conversely, a service with `POST` and `PATCH` on the same resource has a lifecycle — that's an aggregate with state transitions
+- **Error response uniformity:** Quick governance check — do all services return errors in the same shape? Uniform error schemas (`{ code, message, details }`) = platform-level governance exists. Divergent error shapes = independent teams with no shared conventions, implying weak integration governance. This tells you about org culture before you read a single endpoint
 
 **Output:** Contract inventory table — service, team, version, type, counts
 
@@ -46,6 +48,7 @@ This process can be applied manually by an architect, automated via scripts (Pha
 - Field names reveal relationships: `buyerId` in Order → references Customer context
 - Enum values reveal domain lifecycle: `OrderStatus: [draft, placed, confirmed, shipped, delivered, cancelled]`
 - Required fields reveal core vs optional concepts
+- **Deprecated fields** are linguistic archaeology — they contain the *old* ubiquitous language, still in the contract for backward compatibility. The delta between deprecated and current field names shows you the direction the domain vocabulary is evolving. A schema with many deprecated fields is a domain model in transition
 
 **Thought process for Events (AsyncAPI):**
 - Channel/topic names reveal domain boundaries: `orders.placed`, `shipments.delivered`
@@ -140,13 +143,15 @@ This process can be applied manually by an architect, automated via scripts (Pha
 3. Trace event subscriptions: who publishes what, who needs to listen
 4. Count references per service → coupling heatmap
 5. Identify: hub services (referenced by many), leaf services (reference nobody), circular dependencies
+6. **Build dual coupling matrix:** separate API coupling (synchronous) from event coupling (asynchronous) — they have different architectural implications
 
 **Thought process:**
 - A service that includes IDs from 4 other services in its main entity → god entity, coupled to everything. This is the biggest architectural risk
 - A service that is referenced by everyone but references nobody → healthy upstream service. In DDD terms: Published Language or Open Host Service
 - Two services that reference each other → circular dependency. Either they're actually one bounded context, or they need an Anticorruption Layer
 - A service whose event payloads include data from multiple other services → integration/orchestration service, not a domain service. (e.g., Notification Service)
-- Event coupling is looser than API coupling. If Service A calls Service B's API → temporal coupling (A waits for B). If Service A listens to Service B's events → eventual consistency (A doesn't wait). The type of coupling matters for boundary decisions
+- **Dual coupling dimensions matter:** API coupling is *synchronous/temporal* (Service A waits for Service B — if B is down, A breaks). Event coupling is *asynchronous/eventual* (Service A reacts when ready — if B is down, events queue). The type of coupling determines how hard a boundary is to enforce. A service with only event coupling to another is loosely bound. A service making synchronous API calls is tightly bound
+- **Missing event publishing is a coupling signal:** If a service publishes NO events, then every other service that needs its data must call its API synchronously. This forces temporal coupling on the entire system. A service that is referenced by many others but publishes no events is a hidden architectural bottleneck — it should be publishing events to allow consumers to decouple
 
 **Coupling classification (DDD Context Mapping):**
 - Service references another's ID only → Customer-Supplier relationship
@@ -172,12 +177,14 @@ This process can be applied manually by an architect, automated via scripts (Pha
 
 **Thought process:**
 - Start with: one service = one candidate bounded context. Then adjust
-- Merge signal: two services always called together, share schemas, reference each other → one context
+- Merge signal: two services always called together, share schemas, reference each other → the boundary between them is currently fictional. The question becomes: do we merge them into one honest context, or invest in making the boundary real with a proper ACL? The contracts give you the diagnosis — the business decides the treatment
 - Split signal: one service has two distinct sets of endpoints with no shared schemas → two contexts
-- Conway's Law check: if a context spans two teams → either align teams or split the context. If two contexts are in one team → that's fine if the team is small enough
+- Conway's Law check: if a context spans two teams → either align teams or split the context. If two contexts are in one team → that's fine if the team is small enough. Conway's Law cuts both ways — you can reshape the architecture to match the org, or reshape the org to match the desired architecture
 - Infrastructure vs domain: if a service has no domain logic but touches data from many contexts → it's infrastructure (Notification, Search, Analytics). Don't model it as a bounded context
+- **GraphQL mutation surface check:** Compare every mutation the BFF exposes to the REST endpoints downstream. Every mutation should map to an endpoint somewhere. If you find a mutation with no corresponding REST endpoint — either a service is undocumented, or the BFF is doing business logic it shouldn't own. Both are significant findings
+- **Important limitation:** Contract archaeology can only analyze documented boundaries. Services communicating through shared databases, internal direct calls, or undocumented queues are invisible to this technique. Flag these for follow-up with other exhibits (database forensics, log mining). The absence of a contract doesn't mean two services are one context — it means the boundary is undocumented and needs investigation through other techniques
 
-**Output:** Inferred context map — bounded contexts, their boundaries, relationships (Shared Kernel, Customer-Supplier, ACL, etc.)
+**Output:** Inferred context map — bounded contexts, their boundaries, relationships (Shared Kernel, Customer-Supplier, ACL, etc.). For each finding, note whether the evidence suggests merging, splitting, or investing in a proper boundary — but frame these as diagnoses, not prescriptions
 
 ---
 
@@ -198,10 +205,12 @@ This process can be applied manually by an architect, automated via scripts (Pha
 **Thought process:**
 - The intended architecture represents aspirations. The inferred architecture represents reality. Neither is "right" — the gap between them is what needs attention
 - Some gaps are intentional (we know Order is a monolith, we're working on it). Some are unknown (nobody realized Shipping and Order are the same context). The unknown gaps are the value
-- Priority order: coupling violations > ownership disputes > dead boundaries > vocabulary gaps > missing boundaries
+- Default priority order: coupling violations > ownership disputes > dead boundaries > vocabulary gaps > missing boundaries
+- **But real priority is: change frequency × blast radius.** A coupling violation between two services that change quarterly is lower priority than a vocabulary gap in a schema that three teams modify weekly. The contracts tell you coupling; your git history (Exhibit H: commit archaeology) tells you change frequency. Combine them for actionable prioritization
 - For each gap, the question is: do we fix the code to match the architecture, or update the architecture to match the code? The answer depends on which direction the system is evolving
+- **Stale contracts are still evidence.** A contract that hasn't been updated in 12 months while the code changed 50 times tells you something important — the team doesn't maintain their contracts. That's a finding in itself: undocumented drift. Flag stale contracts (check version timestamps, commit dates) as hypotheses to validate, not findings to act on. The freshest signal is production behavior (log mining). The 8 exhibits are layered — each one ground-truths the previous
 
-**Output:** Gap report — gap type, evidence from contracts, severity, recommended action
+**Output:** Gap report — gap type, evidence from contracts, severity, recommended action, change frequency signal (if available from git history)
 
 ---
 
