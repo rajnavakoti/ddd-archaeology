@@ -1,0 +1,10 @@
+{
+  "svc_shipment": {"service": "Shipment Service", "team": "Fulfilment Squad", "status": "active"},
+  "svc_consignee": {"service": "Consignee Service", "team": "Customer Domain Team", "status": "active"},
+  "svc_inventory": {"service": "Inventory Service", "team": "Supply Chain Platform Team", "status": "active"},
+  "svc_carrier": {"service": "Carrier Integration Service", "team": "Carrier Platform Team", "status": "active"},
+  "svc_invoicing": {"service": "Invoicing Service", "team": "Finance Platform Team", "status": "active"},
+  "svc_reporting": {"service": "Reporting Service", "team": "Data & Analytics Team", "status": "active"},
+  "svc_etl_legacy": {"service": "Unknown", "team": "Unknown", "status": "ghost"},
+  "svc_vendor_sync": {"service": "Unknown", "team": "Unknown", "status": "ghost"}
+}
