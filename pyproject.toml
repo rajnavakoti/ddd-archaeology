@@ -1,0 +1,40 @@
+[project]
+name = "ddd-archaeology"
+version = "0.1.0"
+description = "Reverse-engineer DDD bounded contexts from API contracts, event schemas, and GraphQL types"
+readme = "README.md"
+license = {text = "MIT"}
+requires-python = ">=3.10"
+authors = [
+    {name = "Raj Navakoti", email = "rajnavakoti@gmail.com"},
+]
+keywords = ["ddd", "domain-driven-design", "bounded-context", "openapi", "asyncapi", "graphql", "architecture"]
+classifiers = [
+    "Development Status :: 3 - Alpha",
+    "Intended Audience :: Developers",
+    "Topic :: Software Development :: Libraries",
+    "License :: OSI Approved :: MIT License",
+    "Programming Language :: Python :: 3",
+]
+
+dependencies = [
+    "pyyaml>=6.0",
+    "graphql-core>=3.2",
+    "rich>=13.0",
+]
+
+[project.optional-dependencies]
+dev = [
+    "pytest>=8.0",
+    "pytest-cov>=5.0",
+]
+
+[build-system]
+requires = ["setuptools>=68.0"]
+build-backend = "setuptools.build_meta"
+
+[tool.setuptools.packages.find]
+where = ["src"]
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]
