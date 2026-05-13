@@ -1,0 +1,474 @@
+openapi: 3.0.3
+info:
+  title: Shipping & Delivery Service API
+  description: Carrier management, shipment tracking, and delivery operations
+  version: 2.0.3
+  contact:
+    name: Logistics Squad
+    email: logistics@acme-retail.internal
+
+paths:
+  /api/v1/shipments:
+    post:
+      summary: Create a shipment for an order
+      operationId: createShipment
+      tags: [shipments]
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/CreateShipmentRequest'
+      responses:
+        '201':
+          description: Shipment created
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Shipment'
+
+    get:
+      summary: List shipments
+      operationId: listShipments
+      tags: [shipments]
+      parameters:
+        - name: orderId
+          in: query
+          schema:
+            type: string
+        - name: carrierId
+          in: query
+          schema:
+            type: string
+        - name: status
+          in: query
+          schema:
+            $ref: '#/components/schemas/ShipmentStatus'
+        - name: recipientName
+          in: query
+          description: Search by recipient name
+          schema:
+            type: string
+      responses:
+        '200':
+          description: Shipment list
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/ShipmentSummary'
+
+  /api/v1/shipments/{shipmentId}:
+    get:
+      summary: Get shipment details
+      operationId: getShipment
+      tags: [shipments]
+      parameters:
+        - name: shipmentId
+          in: path
+          required: true
+          schema:
+            type: string
+      responses:
+        '200':
+          description: Shipment details
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Shipment'
+
+  /api/v1/shipments/{shipmentId}/tracking:
+    get:
+      summary: Get tracking events for a shipment
+      operationId: getTracking
+      tags: [tracking]
+      parameters:
+        - name: shipmentId
+          in: path
+          required: true
+          schema:
+            type: string
+      responses:
+        '200':
+          description: Tracking history
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/TrackingEvent'
+
+  /api/v1/shipments/{shipmentId}/label:
+    get:
+      summary: Get shipping label
+      operationId: getLabel
+      tags: [labels]
+      parameters:
+        - name: shipmentId
+          in: path
+          required: true
+          schema:
+            type: string
+        - name: format
+          in: query
+          schema:
+            type: string
+            enum: [pdf, zpl, png]
+            default: pdf
+      responses:
+        '200':
+          description: Shipping label
+          content:
+            application/pdf:
+              schema:
+                type: string
+                format: binary
+
+  /api/v1/carriers:
+    get:
+      summary: List available carriers
+      operationId: listCarriers
+      tags: [carriers]
+      responses:
+        '200':
+          description: Carrier list
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/Carrier'
+
+  /api/v1/rates:
+    post:
+      summary: Get shipping rate quotes
+      operationId: getRates
+      tags: [rates]
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/RateRequest'
+      responses:
+        '200':
+          description: Available rates
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/RateQuote'
+
+  /api/v1/returns/{returnId}/shipment:
+    post:
+      summary: Create return shipment
+      operationId: createReturnShipment
+      tags: [returns]
+      parameters:
+        - name: returnId
+          in: path
+          required: true
+          schema:
+            type: string
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/ReturnShipmentRequest'
+      responses:
+        '201':
+          description: Return shipment created
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Shipment'
+
+components:
+  schemas:
+    Shipment:
+      type: object
+      required: [shipmentId, orderId, status]
+      properties:
+        shipmentId:
+          type: string
+          format: uuid
+        orderId:
+          type: string
+        orderLines:
+          type: array
+          description: Which order lines are in this shipment
+          items:
+            type: object
+            properties:
+              lineId:
+                type: string
+              productId:
+                type: string
+              productName:
+                type: string
+              sku:
+                type: string
+              quantity:
+                type: integer
+        recipientId:
+          type: string
+          description: The customer receiving the shipment
+        recipientName:
+          type: string
+        recipientEmail:
+          type: string
+        recipientPhone:
+          type: string
+        deliveryAddress:
+          $ref: '#/components/schemas/DeliveryAddress'
+        originWarehouseId:
+          type: string
+        originWarehouseName:
+          type: string
+        carrierId:
+          type: string
+        carrierName:
+          type: string
+        serviceLevel:
+          type: string
+          enum: [standard, express, next_day, same_day]
+        trackingNumber:
+          type: string
+        trackingUrl:
+          type: string
+        status:
+          $ref: '#/components/schemas/ShipmentStatus'
+        weight:
+          type: number
+          description: Total weight in kg
+        packageCount:
+          type: integer
+        shippingCost:
+          type: number
+          format: double
+        currency:
+          type: string
+        estimatedDelivery:
+          type: string
+          format: date
+        actualDelivery:
+          type: string
+          format: date
+        signedBy:
+          type: string
+        deliveryPhoto:
+          type: string
+          description: URL to proof of delivery photo
+        createdAt:
+          type: string
+          format: date-time
+        updatedAt:
+          type: string
+          format: date-time
+
+    ShipmentSummary:
+      type: object
+      properties:
+        shipmentId:
+          type: string
+        orderId:
+          type: string
+        recipientName:
+          type: string
+        status:
+          $ref: '#/components/schemas/ShipmentStatus'
+        carrierName:
+          type: string
+        trackingNumber:
+          type: string
+        estimatedDelivery:
+          type: string
+          format: date
+
+    ShipmentStatus:
+      type: string
+      enum:
+        - created
+        - label_generated
+        - picked_up
+        - in_transit
+        - out_for_delivery
+        - delivered
+        - failed_attempt
+        - returned_to_sender
+        - exception
+
+    DeliveryAddress:
+      type: object
+      required: [street, city, postal, countryCode]
+      properties:
+        street:
+          type: string
+        street2:
+          type: string
+        city:
+          type: string
+        stateProvince:
+          type: string
+        postal:
+          type: string
+        countryCode:
+          type: string
+        recipientName:
+          type: string
+        recipientPhone:
+          type: string
+        deliveryNotes:
+          type: string
+        isResidential:
+          type: boolean
+          default: true
+        accessCode:
+          type: string
+          description: Gate/door code for delivery
+
+    TrackingEvent:
+      type: object
+      properties:
+        timestamp:
+          type: string
+          format: date-time
+        status:
+          type: string
+        description:
+          type: string
+        location:
+          type: object
+          properties:
+            city:
+              type: string
+            country:
+              type: string
+            facility:
+              type: string
+
+    Carrier:
+      type: object
+      properties:
+        carrierId:
+          type: string
+        name:
+          type: string
+        code:
+          type: string
+          description: "e.g., DHL, UPS, FEDEX, POSTNL"
+        serviceLevels:
+          type: array
+          items:
+            type: string
+        countries:
+          type: array
+          items:
+            type: string
+        isActive:
+          type: boolean
+        averageDeliveryDays:
+          type: integer
+        trackingSupported:
+          type: boolean
+
+    RateRequest:
+      type: object
+      required: [originWarehouseId, destinationPostal, destinationCountry, weight]
+      properties:
+        originWarehouseId:
+          type: string
+        destinationPostal:
+          type: string
+        destinationCountry:
+          type: string
+        weight:
+          type: number
+        dimensions:
+          type: object
+          properties:
+            length:
+              type: number
+            width:
+              type: number
+            height:
+              type: number
+        packageCount:
+          type: integer
+          default: 1
+        serviceLevel:
+          type: string
+          enum: [standard, express, next_day, same_day]
+
+    RateQuote:
+      type: object
+      properties:
+        carrierId:
+          type: string
+        carrierName:
+          type: string
+        serviceLevel:
+          type: string
+        price:
+          type: number
+          format: double
+        currency:
+          type: string
+        estimatedDeliveryDays:
+          type: integer
+        validUntil:
+          type: string
+          format: date-time
+
+    CreateShipmentRequest:
+      type: object
+      required: [orderId, carrierId, deliveryAddress]
+      properties:
+        orderId:
+          type: string
+        orderLines:
+          type: array
+          items:
+            type: object
+            properties:
+              lineId:
+                type: string
+              sku:
+                type: string
+              quantity:
+                type: integer
+        recipientId:
+          type: string
+        recipientName:
+          type: string
+        recipientEmail:
+          type: string
+        recipientPhone:
+          type: string
+        deliveryAddress:
+          $ref: '#/components/schemas/DeliveryAddress'
+        originWarehouseId:
+          type: string
+        carrierId:
+          type: string
+        serviceLevel:
+          type: string
+          enum: [standard, express, next_day, same_day]
+        weight:
+          type: number
+        packageCount:
+          type: integer
+
+    ReturnShipmentRequest:
+      type: object
+      properties:
+        pickupAddress:
+          $ref: '#/components/schemas/DeliveryAddress'
+        returnWarehouseId:
+          type: string
+        carrierId:
+          type: string
+        reason:
+          type: string

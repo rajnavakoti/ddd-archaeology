@@ -1,0 +1,323 @@
+openapi: 3.0.3
+info:
+  title: Notification Service API
+  description: Email, SMS, and push notification delivery for all platform events
+  version: 1.2.0
+  contact:
+    name: Platform Team
+    email: platform@acme-retail.internal
+
+paths:
+  /api/v1/notifications:
+    post:
+      summary: Send a notification
+      operationId: sendNotification
+      tags: [notifications]
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/SendNotificationRequest'
+      responses:
+        '202':
+          description: Notification queued
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Notification'
+
+    get:
+      summary: List notifications for a user
+      operationId: listNotifications
+      tags: [notifications]
+      parameters:
+        - name: userId
+          in: query
+          required: true
+          schema:
+            type: string
+        - name: channel
+          in: query
+          schema:
+            $ref: '#/components/schemas/NotificationChannel'
+        - name: status
+          in: query
+          schema:
+            type: string
+            enum: [queued, sent, delivered, failed, bounced]
+        - name: type
+          in: query
+          schema:
+            $ref: '#/components/schemas/NotificationType'
+      responses:
+        '200':
+          description: Notification list
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/NotificationSummary'
+
+  /api/v1/notifications/{notificationId}:
+    get:
+      summary: Get notification details
+      operationId: getNotification
+      tags: [notifications]
+      parameters:
+        - name: notificationId
+          in: path
+          required: true
+          schema:
+            type: string
+      responses:
+        '200':
+          description: Notification details
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Notification'
+
+  /api/v1/templates:
+    get:
+      summary: List notification templates
+      operationId: listTemplates
+      tags: [templates]
+      responses:
+        '200':
+          description: Template list
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/Template'
+
+  /api/v1/users/{userId}/preferences:
+    get:
+      summary: Get user notification preferences
+      operationId: getUserPreferences
+      tags: [preferences]
+      parameters:
+        - name: userId
+          in: path
+          required: true
+          schema:
+            type: string
+      responses:
+        '200':
+          description: User preferences
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/UserNotificationPreferences'
+
+    put:
+      summary: Update user notification preferences
+      operationId: updateUserPreferences
+      tags: [preferences]
+      parameters:
+        - name: userId
+          in: path
+          required: true
+          schema:
+            type: string
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/UserNotificationPreferences'
+      responses:
+        '200':
+          description: Preferences updated
+
+components:
+  schemas:
+    Notification:
+      type: object
+      properties:
+        notificationId:
+          type: string
+          format: uuid
+        userId:
+          type: string
+          description: Target user
+        userEmail:
+          type: string
+        userName:
+          type: string
+        channel:
+          $ref: '#/components/schemas/NotificationChannel'
+        type:
+          $ref: '#/components/schemas/NotificationType'
+        templateId:
+          type: string
+        subject:
+          type: string
+        body:
+          type: string
+        data:
+          type: object
+          description: Template variables
+          properties:
+            orderId:
+              type: string
+            orderTotal:
+              type: number
+            productName:
+              type: string
+            trackingNumber:
+              type: string
+            trackingUrl:
+              type: string
+            deliveryDate:
+              type: string
+            invoiceNumber:
+              type: string
+            refundAmount:
+              type: number
+            buyerName:
+              type: string
+            shipmentStatus:
+              type: string
+        status:
+          type: string
+          enum: [queued, sent, delivered, failed, bounced]
+        sentAt:
+          type: string
+          format: date-time
+        deliveredAt:
+          type: string
+          format: date-time
+        failureReason:
+          type: string
+        createdAt:
+          type: string
+          format: date-time
+
+    NotificationSummary:
+      type: object
+      properties:
+        notificationId:
+          type: string
+        channel:
+          type: string
+        type:
+          type: string
+        subject:
+          type: string
+        status:
+          type: string
+        sentAt:
+          type: string
+          format: date-time
+
+    NotificationChannel:
+      type: string
+      enum:
+        - email
+        - sms
+        - push
+        - in_app
+
+    NotificationType:
+      type: string
+      enum:
+        - order_confirmation
+        - order_shipped
+        - order_delivered
+        - order_cancelled
+        - payment_received
+        - payment_failed
+        - refund_processed
+        - invoice_issued
+        - delivery_reminder
+        - review_request
+        - welcome
+        - password_reset
+        - loyalty_points_earned
+        - loyalty_tier_change
+        - promotion
+        - back_in_stock
+
+    Template:
+      type: object
+      properties:
+        templateId:
+          type: string
+        name:
+          type: string
+        type:
+          $ref: '#/components/schemas/NotificationType'
+        channel:
+          $ref: '#/components/schemas/NotificationChannel'
+        subject:
+          type: string
+        bodyTemplate:
+          type: string
+        variables:
+          type: array
+          items:
+            type: string
+        isActive:
+          type: boolean
+
+    UserNotificationPreferences:
+      type: object
+      properties:
+        userId:
+          type: string
+        emailEnabled:
+          type: boolean
+          default: true
+        smsEnabled:
+          type: boolean
+          default: false
+        pushEnabled:
+          type: boolean
+          default: true
+        inAppEnabled:
+          type: boolean
+          default: true
+        orderUpdates:
+          type: boolean
+          default: true
+        promotions:
+          type: boolean
+          default: false
+        loyaltyAlerts:
+          type: boolean
+          default: true
+        quietHoursStart:
+          type: string
+          description: "HH:MM format, e.g., 22:00"
+        quietHoursEnd:
+          type: string
+          description: "HH:MM format, e.g., 08:00"
+        preferredLanguage:
+          type: string
+
+    SendNotificationRequest:
+      type: object
+      required: [userId, channel, type]
+      properties:
+        userId:
+          type: string
+        userEmail:
+          type: string
+        userName:
+          type: string
+        channel:
+          $ref: '#/components/schemas/NotificationChannel'
+        type:
+          $ref: '#/components/schemas/NotificationType'
+        templateId:
+          type: string
+        data:
+          type: object
+          description: Template variables — orderId, trackingNumber, etc.
+        scheduledAt:
+          type: string
+          format: date-time
+          description: Schedule for future delivery

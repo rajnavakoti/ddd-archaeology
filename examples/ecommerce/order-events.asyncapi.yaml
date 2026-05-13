@@ -1,0 +1,242 @@
+asyncapi: 2.6.0
+info:
+  title: Order Domain Events
+  description: Events published by the Order service to the platform event bus
+  version: 2.1.0
+  contact:
+    name: Order Squad
+    email: order-squad@acme-retail.internal
+
+channels:
+  orders.placed:
+    publish:
+      operationId: onOrderPlaced
+      summary: Emitted when a new order is confirmed
+      message:
+        $ref: '#/components/messages/OrderPlaced'
+
+  orders.confirmed:
+    publish:
+      operationId: onOrderConfirmed
+      summary: Emitted when payment is verified and order moves to fulfillment
+      message:
+        $ref: '#/components/messages/OrderConfirmed'
+
+  orders.cancelled:
+    publish:
+      operationId: onOrderCancelled
+      summary: Emitted when an order is cancelled (by customer or system)
+      message:
+        $ref: '#/components/messages/OrderCancelled'
+
+  orders.line-added:
+    publish:
+      operationId: onOrderLineAdded
+      summary: Emitted when a line item is added to a draft order
+      message:
+        $ref: '#/components/messages/OrderLineAdded'
+
+  orders.fulfillment-started:
+    publish:
+      operationId: onFulfillmentStarted
+      summary: Emitted when warehouse begins picking
+      message:
+        $ref: '#/components/messages/FulfillmentStarted'
+
+  orders.completed:
+    publish:
+      operationId: onOrderCompleted
+      summary: Emitted when order is delivered and closed
+      message:
+        $ref: '#/components/messages/OrderCompleted'
+
+components:
+  messages:
+    OrderPlaced:
+      payload:
+        type: object
+        required: [eventId, orderId, buyerId, timestamp]
+        properties:
+          eventId:
+            type: string
+            format: uuid
+          eventType:
+            type: string
+            default: order.placed
+          orderId:
+            type: string
+          buyerId:
+            type: string
+          buyerEmail:
+            type: string
+          totalAmount:
+            type: number
+          currency:
+            type: string
+          itemCount:
+            type: integer
+          shippingAddress:
+            $ref: '#/components/schemas/EventAddress'
+          warehouseId:
+            type: string
+            description: Pre-assigned fulfillment warehouse
+          paymentMethod:
+            type: string
+          timestamp:
+            type: string
+            format: date-time
+
+    OrderConfirmed:
+      payload:
+        type: object
+        required: [eventId, orderId, timestamp]
+        properties:
+          eventId:
+            type: string
+            format: uuid
+          eventType:
+            type: string
+            default: order.confirmed
+          orderId:
+            type: string
+          buyerId:
+            type: string
+          paymentId:
+            type: string
+            description: Confirmed payment reference
+          warehouseId:
+            type: string
+          estimatedShipDate:
+            type: string
+            format: date
+          timestamp:
+            type: string
+            format: date-time
+
+    OrderCancelled:
+      payload:
+        type: object
+        required: [eventId, orderId, reason, timestamp]
+        properties:
+          eventId:
+            type: string
+            format: uuid
+          eventType:
+            type: string
+            default: order.cancelled
+          orderId:
+            type: string
+          buyerId:
+            type: string
+          reason:
+            type: string
+            enum: [customer_request, payment_failed, fraud_detected, out_of_stock, system_timeout]
+          cancelledBy:
+            type: string
+            enum: [customer, system, admin]
+          refundRequired:
+            type: boolean
+          refundAmount:
+            type: number
+          timestamp:
+            type: string
+            format: date-time
+
+    OrderLineAdded:
+      payload:
+        type: object
+        required: [eventId, orderId, lineId, productId, timestamp]
+        properties:
+          eventId:
+            type: string
+            format: uuid
+          eventType:
+            type: string
+            default: order.line_added
+          orderId:
+            type: string
+          lineId:
+            type: string
+          productId:
+            type: string
+          sku:
+            type: string
+          quantity:
+            type: integer
+          unitPrice:
+            type: number
+          timestamp:
+            type: string
+            format: date-time
+
+    FulfillmentStarted:
+      payload:
+        type: object
+        required: [eventId, orderId, warehouseId, timestamp]
+        properties:
+          eventId:
+            type: string
+            format: uuid
+          eventType:
+            type: string
+            default: order.fulfillment_started
+          orderId:
+            type: string
+          warehouseId:
+            type: string
+          warehouseName:
+            type: string
+          pickerAssigned:
+            type: string
+            description: Internal warehouse staff ID
+          estimatedPickTime:
+            type: integer
+            description: Minutes
+          lineCount:
+            type: integer
+          timestamp:
+            type: string
+            format: date-time
+
+    OrderCompleted:
+      payload:
+        type: object
+        required: [eventId, orderId, timestamp]
+        properties:
+          eventId:
+            type: string
+            format: uuid
+          eventType:
+            type: string
+            default: order.completed
+          orderId:
+            type: string
+          buyerId:
+            type: string
+          totalAmount:
+            type: number
+          currency:
+            type: string
+          deliveredAt:
+            type: string
+            format: date-time
+          deliveryDays:
+            type: integer
+            description: Days from placed to delivered
+          loyaltyPointsEarned:
+            type: integer
+          timestamp:
+            type: string
+            format: date-time
+
+  schemas:
+    EventAddress:
+      type: object
+      properties:
+        city:
+          type: string
+        country:
+          type: string
+        postalCode:
+          type: string
+      description: Minimal address in events — just enough for routing/analytics

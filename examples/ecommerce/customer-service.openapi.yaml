@@ -1,0 +1,391 @@
+openapi: 3.0.3
+info:
+  title: Customer Service API
+  description: Customer profiles, preferences, and account management
+  version: 3.1.0
+  contact:
+    name: Customer Experience Team
+    email: cx-team@acme-retail.internal
+
+paths:
+  /api/v1/customers:
+    post:
+      summary: Register a new customer
+      operationId: createCustomer
+      tags: [customers]
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/CreateCustomerRequest'
+      responses:
+        '201':
+          description: Customer created
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Customer'
+
+    get:
+      summary: Search customers
+      operationId: searchCustomers
+      tags: [customers]
+      parameters:
+        - name: email
+          in: query
+          schema:
+            type: string
+        - name: name
+          in: query
+          schema:
+            type: string
+        - name: segment
+          in: query
+          schema:
+            $ref: '#/components/schemas/CustomerSegment'
+        - name: loyaltyTier
+          in: query
+          schema:
+            $ref: '#/components/schemas/LoyaltyTier'
+      responses:
+        '200':
+          description: Customer list
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  customers:
+                    type: array
+                    items:
+                      $ref: '#/components/schemas/CustomerSummary'
+                  total:
+                    type: integer
+
+  /api/v1/customers/{customerId}:
+    get:
+      summary: Get customer profile
+      operationId: getCustomer
+      tags: [customers]
+      parameters:
+        - name: customerId
+          in: path
+          required: true
+          schema:
+            type: string
+      responses:
+        '200':
+          description: Customer profile
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Customer'
+
+    patch:
+      summary: Update customer profile
+      operationId: updateCustomer
+      tags: [customers]
+      parameters:
+        - name: customerId
+          in: path
+          required: true
+          schema:
+            type: string
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/UpdateCustomerRequest'
+      responses:
+        '200':
+          description: Customer updated
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Customer'
+
+  /api/v1/customers/{customerId}/addresses:
+    get:
+      summary: List customer addresses
+      operationId: listAddresses
+      tags: [addresses]
+      parameters:
+        - name: customerId
+          in: path
+          required: true
+          schema:
+            type: string
+      responses:
+        '200':
+          description: Address list
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/CustomerAddress'
+
+    post:
+      summary: Add address to customer profile
+      operationId: addAddress
+      tags: [addresses]
+      parameters:
+        - name: customerId
+          in: path
+          required: true
+          schema:
+            type: string
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/CustomerAddress'
+      responses:
+        '201':
+          description: Address added
+
+  /api/v1/customers/{customerId}/preferences:
+    get:
+      summary: Get customer preferences
+      operationId: getPreferences
+      tags: [preferences]
+      parameters:
+        - name: customerId
+          in: path
+          required: true
+          schema:
+            type: string
+      responses:
+        '200':
+          description: Preferences
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/CustomerPreferences'
+
+  /api/v1/customers/{customerId}/loyalty:
+    get:
+      summary: Get loyalty program details
+      operationId: getLoyalty
+      tags: [loyalty]
+      parameters:
+        - name: customerId
+          in: path
+          required: true
+          schema:
+            type: string
+      responses:
+        '200':
+          description: Loyalty info
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/LoyaltyInfo'
+
+components:
+  schemas:
+    Customer:
+      type: object
+      required: [customerId, email, firstName, lastName]
+      properties:
+        customerId:
+          type: string
+          format: uuid
+        email:
+          type: string
+          format: email
+        firstName:
+          type: string
+        lastName:
+          type: string
+        fullName:
+          type: string
+          description: Computed firstName + lastName
+        phone:
+          type: string
+        dateOfBirth:
+          type: string
+          format: date
+        segment:
+          $ref: '#/components/schemas/CustomerSegment'
+        loyaltyTier:
+          $ref: '#/components/schemas/LoyaltyTier'
+        loyaltyPoints:
+          type: integer
+        defaultAddress:
+          $ref: '#/components/schemas/CustomerAddress'
+        communicationPreferences:
+          $ref: '#/components/schemas/CustomerPreferences'
+        marketingConsent:
+          type: boolean
+        language:
+          type: string
+          description: ISO 639-1
+        currency:
+          type: string
+          description: Preferred currency
+        createdAt:
+          type: string
+          format: date-time
+        lastLoginAt:
+          type: string
+          format: date-time
+        lastOrderAt:
+          type: string
+          format: date-time
+        totalOrders:
+          type: integer
+        totalSpent:
+          type: number
+          format: double
+
+    CustomerSummary:
+      type: object
+      properties:
+        customerId:
+          type: string
+        email:
+          type: string
+        fullName:
+          type: string
+        segment:
+          $ref: '#/components/schemas/CustomerSegment'
+        loyaltyTier:
+          $ref: '#/components/schemas/LoyaltyTier'
+        totalOrders:
+          type: integer
+        lastOrderAt:
+          type: string
+          format: date-time
+
+    CustomerSegment:
+      type: string
+      enum:
+        - new
+        - active
+        - vip
+        - at_risk
+        - churned
+        - reactivated
+
+    LoyaltyTier:
+      type: string
+      enum:
+        - bronze
+        - silver
+        - gold
+        - platinum
+
+    CustomerAddress:
+      type: object
+      required: [streetAddress, city, zipCode, countryCode]
+      properties:
+        addressId:
+          type: string
+        label:
+          type: string
+          description: "e.g., Home, Work, Partner's place"
+        streetAddress:
+          type: string
+        apartmentUnit:
+          type: string
+        city:
+          type: string
+        stateProvince:
+          type: string
+        zipCode:
+          type: string
+        countryCode:
+          type: string
+          description: ISO 3166-1 alpha-2
+        isDefault:
+          type: boolean
+        phoneNumber:
+          type: string
+
+    CustomerPreferences:
+      type: object
+      properties:
+        emailNotifications:
+          type: boolean
+        smsNotifications:
+          type: boolean
+        pushNotifications:
+          type: boolean
+        newsletterSubscribed:
+          type: boolean
+        preferredContactMethod:
+          type: string
+          enum: [email, sms, phone, push]
+        preferredLanguage:
+          type: string
+        preferredCurrency:
+          type: string
+
+    LoyaltyInfo:
+      type: object
+      properties:
+        customerId:
+          type: string
+        tier:
+          $ref: '#/components/schemas/LoyaltyTier'
+        points:
+          type: integer
+        pointsToNextTier:
+          type: integer
+        tierExpiresAt:
+          type: string
+          format: date
+        lifetimePoints:
+          type: integer
+        redeemableValue:
+          type: number
+          format: double
+          description: Points converted to currency value
+
+    CreateCustomerRequest:
+      type: object
+      required: [email, firstName, lastName]
+      properties:
+        email:
+          type: string
+          format: email
+        firstName:
+          type: string
+        lastName:
+          type: string
+        phone:
+          type: string
+        dateOfBirth:
+          type: string
+          format: date
+        address:
+          $ref: '#/components/schemas/CustomerAddress'
+        marketingConsent:
+          type: boolean
+          default: false
+        language:
+          type: string
+        currency:
+          type: string
+
+    UpdateCustomerRequest:
+      type: object
+      properties:
+        firstName:
+          type: string
+        lastName:
+          type: string
+        phone:
+          type: string
+        dateOfBirth:
+          type: string
+          format: date
+        language:
+          type: string
+        currency:
+          type: string
+        marketingConsent:
+          type: boolean

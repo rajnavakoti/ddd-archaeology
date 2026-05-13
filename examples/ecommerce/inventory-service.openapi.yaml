@@ -1,0 +1,387 @@
+openapi: 3.0.3
+info:
+  title: Inventory & Warehouse Service API
+  description: Stock management, warehouse operations, and product availability
+  version: 1.8.0
+  contact:
+    name: Supply Chain Platform Team
+    email: supply-chain@acme-retail.internal
+
+paths:
+  /api/v1/warehouses:
+    get:
+      summary: List all warehouses
+      operationId: listWarehouses
+      tags: [warehouses]
+      responses:
+        '200':
+          description: Warehouse list
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/Warehouse'
+
+  /api/v1/warehouses/{warehouseId}/stock:
+    get:
+      summary: Get stock levels for a warehouse
+      operationId: getWarehouseStock
+      tags: [stock]
+      parameters:
+        - name: warehouseId
+          in: path
+          required: true
+          schema:
+            type: string
+        - name: sku
+          in: query
+          schema:
+            type: string
+        - name: belowThreshold
+          in: query
+          description: Only return items below reorder threshold
+          schema:
+            type: boolean
+      responses:
+        '200':
+          description: Stock levels
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/StockLevel'
+
+  /api/v1/products/{sku}/availability:
+    get:
+      summary: Check product availability across warehouses
+      operationId: checkAvailability
+      tags: [availability]
+      parameters:
+        - name: sku
+          in: path
+          required: true
+          schema:
+            type: string
+        - name: quantity
+          in: query
+          required: true
+          schema:
+            type: integer
+        - name: deliveryZipCode
+          in: query
+          description: Zip code for nearest warehouse calculation
+          schema:
+            type: string
+      responses:
+        '200':
+          description: Availability across warehouses
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/AvailabilityResponse'
+
+  /api/v1/reservations:
+    post:
+      summary: Reserve stock for an order
+      operationId: createReservation
+      tags: [reservations]
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/ReservationRequest'
+      responses:
+        '201':
+          description: Stock reserved
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Reservation'
+
+  /api/v1/reservations/{reservationId}:
+    delete:
+      summary: Cancel a stock reservation
+      operationId: cancelReservation
+      tags: [reservations]
+      parameters:
+        - name: reservationId
+          in: path
+          required: true
+          schema:
+            type: string
+      responses:
+        '204':
+          description: Reservation cancelled
+
+  /api/v1/products:
+    get:
+      summary: List products in catalog
+      operationId: listProducts
+      tags: [products]
+      parameters:
+        - name: category
+          in: query
+          schema:
+            type: string
+        - name: search
+          in: query
+          schema:
+            type: string
+        - name: inStock
+          in: query
+          schema:
+            type: boolean
+      responses:
+        '200':
+          description: Product list
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  products:
+                    type: array
+                    items:
+                      $ref: '#/components/schemas/Product'
+                  total:
+                    type: integer
+
+  /api/v1/products/{sku}:
+    get:
+      summary: Get product details
+      operationId: getProduct
+      tags: [products]
+      parameters:
+        - name: sku
+          in: path
+          required: true
+          schema:
+            type: string
+      responses:
+        '200':
+          description: Product details
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Product'
+
+components:
+  schemas:
+    Warehouse:
+      type: object
+      properties:
+        warehouseId:
+          type: string
+        name:
+          type: string
+        type:
+          type: string
+          enum: [distribution_center, fulfillment_center, dark_store, partner]
+        location:
+          $ref: '#/components/schemas/WarehouseLocation'
+        capacity:
+          type: integer
+          description: Total pallet positions
+        utilization:
+          type: number
+          format: double
+          description: Current utilization percentage
+        isActive:
+          type: boolean
+        operatingHours:
+          type: string
+          description: "e.g., Mon-Sat 06:00-22:00"
+        shipsToCountries:
+          type: array
+          items:
+            type: string
+        averagePickTime:
+          type: integer
+          description: Average minutes to pick an order
+
+    WarehouseLocation:
+      type: object
+      properties:
+        addr:
+          type: string
+          description: Street address
+        city:
+          type: string
+        region:
+          type: string
+        zip:
+          type: string
+        country:
+          type: string
+        lat:
+          type: number
+          format: double
+        lng:
+          type: number
+          format: double
+
+    StockLevel:
+      type: object
+      properties:
+        sku:
+          type: string
+        productName:
+          type: string
+        warehouseId:
+          type: string
+        quantityOnHand:
+          type: integer
+        quantityReserved:
+          type: integer
+        quantityAvailable:
+          type: integer
+          description: onHand - reserved
+        reorderThreshold:
+          type: integer
+        reorderQuantity:
+          type: integer
+        lastReplenished:
+          type: string
+          format: date-time
+        daysOfSupply:
+          type: integer
+          description: Estimated days until stockout at current demand
+
+    AvailabilityResponse:
+      type: object
+      properties:
+        sku:
+          type: string
+        requestedQuantity:
+          type: integer
+        isAvailable:
+          type: boolean
+        warehouses:
+          type: array
+          items:
+            type: object
+            properties:
+              warehouseId:
+                type: string
+              warehouseName:
+                type: string
+              available:
+                type: integer
+              estimatedShipDate:
+                type: string
+                format: date
+              estimatedDeliveryDate:
+                type: string
+                format: date
+              shippingCost:
+                type: number
+                format: double
+
+    Product:
+      type: object
+      properties:
+        sku:
+          type: string
+        name:
+          type: string
+        description:
+          type: string
+        category:
+          type: string
+        subcategory:
+          type: string
+        brand:
+          type: string
+        price:
+          type: number
+          format: double
+        currency:
+          type: string
+        weight:
+          type: number
+          description: Weight in kg
+        dimensions:
+          type: object
+          properties:
+            length:
+              type: number
+            width:
+              type: number
+            height:
+              type: number
+            unit:
+              type: string
+              enum: [cm, in]
+        imageUrls:
+          type: array
+          items:
+            type: string
+        isActive:
+          type: boolean
+        totalStockAcrossWarehouses:
+          type: integer
+        supplierCode:
+          type: string
+        supplierName:
+          type: string
+
+    ReservationRequest:
+      type: object
+      required: [orderId, items]
+      properties:
+        orderId:
+          type: string
+          description: The order this reservation is for
+        userId:
+          type: string
+          description: Account that placed the order
+        items:
+          type: array
+          items:
+            type: object
+            required: [sku, quantity]
+            properties:
+              sku:
+                type: string
+              quantity:
+                type: integer
+              preferredWarehouseId:
+                type: string
+        expiresIn:
+          type: integer
+          description: Minutes until reservation auto-cancels
+          default: 30
+
+    Reservation:
+      type: object
+      properties:
+        reservationId:
+          type: string
+        orderId:
+          type: string
+        userId:
+          type: string
+        status:
+          type: string
+          enum: [active, fulfilled, cancelled, expired]
+        items:
+          type: array
+          items:
+            type: object
+            properties:
+              sku:
+                type: string
+              quantity:
+                type: integer
+              warehouseId:
+                type: string
+                description: Assigned warehouse
+        createdAt:
+          type: string
+          format: date-time
+        expiresAt:
+          type: string
+          format: date-time

@@ -1,0 +1,15 @@
+# Talk prep — not public
+docs/exhibit-a-story-script.md
+
+# Python
+__pycache__/
+*.pyc
+.venv/
+*.egg-info/
+
+# OS
+.DS_Store
+
+# IDE
+.idea/
+.vscode/

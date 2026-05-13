@@ -1,0 +1,276 @@
+asyncapi: 2.6.0
+info:
+  title: Shipping Domain Events
+  description: Events published by the Shipping service for shipment lifecycle
+  version: 1.3.0
+  contact:
+    name: Logistics Squad
+    email: logistics@acme-retail.internal
+
+channels:
+  shipments.created:
+    publish:
+      operationId: onShipmentCreated
+      summary: Emitted when a shipment record is created for an order
+      message:
+        $ref: '#/components/messages/ShipmentCreated'
+
+  shipments.picked-up:
+    publish:
+      operationId: onShipmentPickedUp
+      summary: Emitted when carrier picks up the package
+      message:
+        $ref: '#/components/messages/ShipmentPickedUp'
+
+  shipments.in-transit:
+    publish:
+      operationId: onShipmentInTransit
+      summary: Emitted on each transit checkpoint
+      message:
+        $ref: '#/components/messages/ShipmentInTransit'
+
+  shipments.out-for-delivery:
+    publish:
+      operationId: onShipmentOutForDelivery
+      summary: Emitted when package is on the delivery vehicle
+      message:
+        $ref: '#/components/messages/ShipmentOutForDelivery'
+
+  shipments.delivered:
+    publish:
+      operationId: onShipmentDelivered
+      summary: Emitted when delivery is confirmed
+      message:
+        $ref: '#/components/messages/ShipmentDelivered'
+
+  shipments.failed:
+    publish:
+      operationId: onShipmentFailed
+      summary: Emitted when delivery attempt fails
+      message:
+        $ref: '#/components/messages/ShipmentFailed'
+
+  shipments.returned:
+    publish:
+      operationId: onShipmentReturned
+      summary: Emitted when a return shipment is initiated
+      message:
+        $ref: '#/components/messages/ShipmentReturned'
+
+components:
+  messages:
+    ShipmentCreated:
+      payload:
+        type: object
+        required: [eventId, shipmentId, orderId, timestamp]
+        properties:
+          eventId:
+            type: string
+            format: uuid
+          eventType:
+            type: string
+            default: shipment.created
+          shipmentId:
+            type: string
+          orderId:
+            type: string
+          recipientId:
+            type: string
+          recipientName:
+            type: string
+          carrierId:
+            type: string
+          carrierName:
+            type: string
+          serviceLevel:
+            type: string
+            enum: [standard, express, next_day, same_day]
+          originWarehouseId:
+            type: string
+          packageCount:
+            type: integer
+          weight:
+            type: number
+          estimatedDelivery:
+            type: string
+            format: date
+          timestamp:
+            type: string
+            format: date-time
+
+    ShipmentPickedUp:
+      payload:
+        type: object
+        required: [eventId, shipmentId, trackingNumber, timestamp]
+        properties:
+          eventId:
+            type: string
+            format: uuid
+          eventType:
+            type: string
+            default: shipment.picked_up
+          shipmentId:
+            type: string
+          orderId:
+            type: string
+          trackingNumber:
+            type: string
+          carrierName:
+            type: string
+          pickedUpAt:
+            type: string
+            format: date-time
+          facility:
+            type: string
+          timestamp:
+            type: string
+            format: date-time
+
+    ShipmentInTransit:
+      payload:
+        type: object
+        required: [eventId, shipmentId, timestamp]
+        properties:
+          eventId:
+            type: string
+            format: uuid
+          eventType:
+            type: string
+            default: shipment.in_transit
+          shipmentId:
+            type: string
+          orderId:
+            type: string
+          trackingNumber:
+            type: string
+          currentLocation:
+            type: object
+            properties:
+              city:
+                type: string
+              country:
+                type: string
+              facility:
+                type: string
+          checkpointDescription:
+            type: string
+          estimatedDelivery:
+            type: string
+            format: date
+          timestamp:
+            type: string
+            format: date-time
+
+    ShipmentOutForDelivery:
+      payload:
+        type: object
+        required: [eventId, shipmentId, timestamp]
+        properties:
+          eventId:
+            type: string
+            format: uuid
+          eventType:
+            type: string
+            default: shipment.out_for_delivery
+          shipmentId:
+            type: string
+          orderId:
+            type: string
+          recipientName:
+            type: string
+          deliveryCity:
+            type: string
+          driverEstimate:
+            type: string
+            description: "e.g., 14:00-16:00"
+          timestamp:
+            type: string
+            format: date-time
+
+    ShipmentDelivered:
+      payload:
+        type: object
+        required: [eventId, shipmentId, orderId, timestamp]
+        properties:
+          eventId:
+            type: string
+            format: uuid
+          eventType:
+            type: string
+            default: shipment.delivered
+          shipmentId:
+            type: string
+          orderId:
+            type: string
+          recipientId:
+            type: string
+          deliveredAt:
+            type: string
+            format: date-time
+          signedBy:
+            type: string
+          proofOfDeliveryUrl:
+            type: string
+          deliveryDaysFromShip:
+            type: integer
+            description: Days from pickup to delivery
+          timestamp:
+            type: string
+            format: date-time
+
+    ShipmentFailed:
+      payload:
+        type: object
+        required: [eventId, shipmentId, reason, timestamp]
+        properties:
+          eventId:
+            type: string
+            format: uuid
+          eventType:
+            type: string
+            default: shipment.delivery_failed
+          shipmentId:
+            type: string
+          orderId:
+            type: string
+          recipientId:
+            type: string
+          reason:
+            type: string
+            enum: [no_one_home, wrong_address, refused, damaged, access_issue]
+          attemptNumber:
+            type: integer
+          nextAttemptDate:
+            type: string
+            format: date
+          timestamp:
+            type: string
+            format: date-time
+
+    ShipmentReturned:
+      payload:
+        type: object
+        required: [eventId, shipmentId, returnReason, timestamp]
+        properties:
+          eventId:
+            type: string
+            format: uuid
+          eventType:
+            type: string
+            default: shipment.returned
+          shipmentId:
+            type: string
+          orderId:
+            type: string
+          recipientId:
+            type: string
+          returnReason:
+            type: string
+            enum: [customer_request, defective, wrong_item, undeliverable]
+          returnWarehouseId:
+            type: string
+          refundRequired:
+            type: boolean
+          timestamp:
+            type: string
+            format: date-time

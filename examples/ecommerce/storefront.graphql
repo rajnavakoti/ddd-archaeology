@@ -1,0 +1,352 @@
+# Storefront BFF (Backend for Frontend) — GraphQL Schema
+# Used by the web and mobile apps
+# Owned by: Frontend Platform Team
+
+type Query {
+  """Get current user's profile"""
+  me: User!
+
+  """Get a specific order"""
+  order(id: ID!): Order
+
+  """List current user's orders"""
+  myOrders(
+    status: OrderStatus
+    first: Int = 20
+    after: String
+  ): OrderConnection!
+
+  """Search products"""
+  products(
+    query: String
+    category: String
+    inStock: Boolean
+    first: Int = 20
+    after: String
+  ): ProductConnection!
+
+  """Get product details"""
+  product(sku: String!): Product
+
+  """Track a shipment"""
+  tracking(orderId: ID!): TrackingInfo
+
+  """Get current user's cart"""
+  cart: Cart
+}
+
+type Mutation {
+  """Add item to cart"""
+  addToCart(input: AddToCartInput!): Cart!
+
+  """Remove item from cart"""
+  removeFromCart(lineId: ID!): Cart!
+
+  """Update cart item quantity"""
+  updateCartQuantity(lineId: ID!, quantity: Int!): Cart!
+
+  """Place order from current cart"""
+  placeOrder(input: PlaceOrderInput!): Order!
+
+  """Cancel an order"""
+  cancelOrder(orderId: ID!, reason: String!): Order!
+
+  """Update user profile"""
+  updateProfile(input: UpdateProfileInput!): User!
+
+  """Add address to user profile"""
+  addAddress(input: AddressInput!): Address!
+
+  """Request a refund"""
+  requestRefund(input: RefundInput!): RefundResult!
+}
+
+# ─── User / Account ───
+
+type User {
+  id: ID!
+  email: String!
+  name: String!
+  firstName: String!
+  lastName: String!
+  phone: String
+  addresses: [Address!]!
+  defaultAddress: Address
+  loyaltyTier: LoyaltyTier!
+  loyaltyPoints: Int!
+  preferences: UserPreferences!
+  recentOrders(first: Int = 5): [Order!]!
+  createdAt: DateTime!
+}
+
+type UserPreferences {
+  language: String!
+  currency: String!
+  emailNotifications: Boolean!
+  pushNotifications: Boolean!
+}
+
+enum LoyaltyTier {
+  BRONZE
+  SILVER
+  GOLD
+  PLATINUM
+}
+
+# ─── Address ───
+
+type Address {
+  id: ID!
+  label: String
+  street: String!
+  street2: String
+  city: String!
+  region: String
+  postalCode: String!
+  country: String!
+  phone: String
+  isDefault: Boolean!
+}
+
+input AddressInput {
+  label: String
+  street: String!
+  street2: String
+  city: String!
+  region: String
+  postalCode: String!
+  country: String!
+  phone: String
+  isDefault: Boolean = false
+}
+
+# ─── Product ───
+
+type Product {
+  sku: String!
+  name: String!
+  description: String!
+  category: String!
+  brand: String
+  price: Money!
+  images: [String!]!
+  inStock: Boolean!
+  availableQuantity: Int!
+  rating: Float
+  reviewCount: Int
+  relatedProducts: [Product!]!
+}
+
+type ProductConnection {
+  edges: [ProductEdge!]!
+  pageInfo: PageInfo!
+  totalCount: Int!
+}
+
+type ProductEdge {
+  node: Product!
+  cursor: String!
+}
+
+# ─── Order ───
+
+type Order {
+  id: ID!
+  status: OrderStatus!
+  lines: [OrderLine!]!
+  shippingAddress: Address!
+  billingAddress: Address
+  payment: PaymentSummary
+  shipment: ShipmentSummary
+  subtotal: Money!
+  tax: Money!
+  shipping: Money!
+  total: Money!
+  placedAt: DateTime!
+  estimatedDelivery: Date
+}
+
+type OrderLine {
+  id: ID!
+  product: Product!
+  quantity: Int!
+  unitPrice: Money!
+  lineTotal: Money!
+}
+
+enum OrderStatus {
+  DRAFT
+  PLACED
+  CONFIRMED
+  PICKING
+  SHIPPED
+  DELIVERED
+  CANCELLED
+  RETURNED
+}
+
+type OrderConnection {
+  edges: [OrderEdge!]!
+  pageInfo: PageInfo!
+  totalCount: Int!
+}
+
+type OrderEdge {
+  node: Order!
+  cursor: String!
+}
+
+# ─── Cart ───
+
+type Cart {
+  id: ID!
+  lines: [CartLine!]!
+  itemCount: Int!
+  subtotal: Money!
+  estimatedTax: Money!
+  estimatedShipping: Money!
+  estimatedTotal: Money!
+}
+
+type CartLine {
+  id: ID!
+  product: Product!
+  quantity: Int!
+  unitPrice: Money!
+  lineTotal: Money!
+}
+
+input AddToCartInput {
+  sku: String!
+  quantity: Int! = 1
+}
+
+input PlaceOrderInput {
+  shippingAddressId: ID!
+  billingAddressId: ID
+  paymentMethod: PaymentMethodType!
+  cardToken: String
+  notes: String
+}
+
+# ─── Payment ───
+
+type PaymentSummary {
+  id: ID!
+  method: PaymentMethodType!
+  status: PaymentStatus!
+  amount: Money!
+  cardLast4: String
+}
+
+enum PaymentMethodType {
+  CREDIT_CARD
+  DEBIT_CARD
+  PAYPAL
+  BANK_TRANSFER
+  STORE_CREDIT
+  KLARNA
+  IDEAL
+}
+
+enum PaymentStatus {
+  PENDING
+  AUTHORIZED
+  CAPTURED
+  FAILED
+  REFUNDED
+}
+
+# ─── Shipment ───
+
+type ShipmentSummary {
+  id: ID!
+  carrier: String!
+  trackingNumber: String
+  trackingUrl: String
+  status: ShipmentStatus!
+  estimatedDelivery: Date
+}
+
+enum ShipmentStatus {
+  CREATED
+  PICKED_UP
+  IN_TRANSIT
+  OUT_FOR_DELIVERY
+  DELIVERED
+  FAILED
+  RETURNED
+}
+
+type TrackingInfo {
+  shipmentId: ID!
+  carrier: String!
+  trackingNumber: String!
+  status: ShipmentStatus!
+  estimatedDelivery: Date
+  events: [TrackingEvent!]!
+}
+
+type TrackingEvent {
+  timestamp: DateTime!
+  status: String!
+  description: String!
+  location: String
+}
+
+# ─── Refund ───
+
+input RefundInput {
+  orderId: ID!
+  reason: RefundReason!
+  amount: Float
+  notes: String
+}
+
+enum RefundReason {
+  CUSTOMER_REQUEST
+  DEFECTIVE
+  WRONG_ITEM
+  NEVER_RECEIVED
+  DUPLICATE
+}
+
+type RefundResult {
+  refundId: ID!
+  status: RefundStatus!
+  amount: Money!
+  method: String!
+  estimatedProcessingDays: Int!
+}
+
+enum RefundStatus {
+  PENDING
+  APPROVED
+  PROCESSED
+  REJECTED
+}
+
+# ─── Shared Types ───
+
+type Money {
+  amount: Float!
+  currency: String!
+}
+
+type PageInfo {
+  hasNextPage: Boolean!
+  hasPreviousPage: Boolean!
+  startCursor: String
+  endCursor: String
+}
+
+input UpdateProfileInput {
+  firstName: String
+  lastName: String
+  phone: String
+  language: String
+  currency: String
+}
+
+scalar DateTime
+scalar Date

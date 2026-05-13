@@ -1,0 +1,480 @@
+openapi: 3.0.3
+info:
+  title: Order Service API
+  description: Manages order lifecycle for the e-commerce platform
+  version: 2.4.1
+  contact:
+    name: Order Squad
+    email: order-squad@acme-retail.internal
+
+paths:
+  /api/v2/orders:
+    post:
+      summary: Create a new order
+      operationId: createOrder
+      tags: [orders]
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/CreateOrderRequest'
+      responses:
+        '201':
+          description: Order created
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Order'
+
+    get:
+      summary: List orders with filtering
+      operationId: listOrders
+      tags: [orders]
+      parameters:
+        - name: buyerId
+          in: query
+          schema:
+            type: string
+        - name: status
+          in: query
+          schema:
+            $ref: '#/components/schemas/OrderStatus'
+        - name: warehouseId
+          in: query
+          description: Filter by fulfillment warehouse
+          schema:
+            type: string
+        - name: carrierId
+          in: query
+          description: Filter by shipping carrier
+          schema:
+            type: string
+        - name: dateFrom
+          in: query
+          schema:
+            type: string
+            format: date
+        - name: dateTo
+          in: query
+          schema:
+            type: string
+            format: date
+      responses:
+        '200':
+          description: List of orders
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  orders:
+                    type: array
+                    items:
+                      $ref: '#/components/schemas/OrderSummary'
+                  pagination:
+                    $ref: '#/components/schemas/Pagination'
+
+  /api/v2/orders/{orderId}:
+    get:
+      summary: Get order details
+      operationId: getOrder
+      tags: [orders]
+      parameters:
+        - name: orderId
+          in: path
+          required: true
+          schema:
+            type: string
+      responses:
+        '200':
+          description: Order details
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Order'
+
+  /api/v2/orders/{orderId}/lines:
+    post:
+      summary: Add line item to order
+      operationId: addOrderLine
+      tags: [order-lines]
+      parameters:
+        - name: orderId
+          in: path
+          required: true
+          schema:
+            type: string
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/AddLineRequest'
+      responses:
+        '201':
+          description: Line added
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/OrderLine'
+
+  /api/v2/orders/{orderId}/shipment:
+    get:
+      summary: Get shipment details for an order
+      operationId: getOrderShipment
+      tags: [shipment]
+      parameters:
+        - name: orderId
+          in: path
+          required: true
+          schema:
+            type: string
+      responses:
+        '200':
+          description: Shipment info
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ShipmentInfo'
+
+  /api/v2/orders/{orderId}/invoice:
+    get:
+      summary: Get invoice for an order
+      operationId: getOrderInvoice
+      tags: [invoice]
+      parameters:
+        - name: orderId
+          in: path
+          required: true
+          schema:
+            type: string
+      responses:
+        '200':
+          description: Invoice details
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Invoice'
+
+  /api/v2/orders/{orderId}/cancel:
+    post:
+      summary: Cancel an order
+      operationId: cancelOrder
+      tags: [orders]
+      parameters:
+        - name: orderId
+          in: path
+          required: true
+          schema:
+            type: string
+      requestBody:
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                reason:
+                  type: string
+                cancelledBy:
+                  type: string
+                  description: User ID of who cancelled
+                refundMethod:
+                  type: string
+                  enum: [original_payment, store_credit, manual]
+      responses:
+        '200':
+          description: Order cancelled
+
+components:
+  schemas:
+    Order:
+      type: object
+      required: [orderId, buyerId, status, lines, createdAt]
+      properties:
+        orderId:
+          type: string
+          format: uuid
+        buyerId:
+          type: string
+          description: The customer placing the order
+        buyerName:
+          type: string
+        buyerEmail:
+          type: string
+          format: email
+        status:
+          $ref: '#/components/schemas/OrderStatus'
+        lines:
+          type: array
+          items:
+            $ref: '#/components/schemas/OrderLine'
+        shippingAddress:
+          $ref: '#/components/schemas/Address'
+        billingAddress:
+          $ref: '#/components/schemas/Address'
+        warehouseId:
+          type: string
+          description: Assigned fulfillment warehouse
+        warehouseName:
+          type: string
+        carrierId:
+          type: string
+          description: Assigned shipping carrier
+        carrierName:
+          type: string
+        trackingNumber:
+          type: string
+        estimatedDelivery:
+          type: string
+          format: date
+        invoiceId:
+          type: string
+        invoiceNumber:
+          type: string
+        paymentMethod:
+          type: string
+          enum: [credit_card, debit_card, paypal, bank_transfer, store_credit]
+        paymentStatus:
+          type: string
+          enum: [pending, authorized, captured, refunded, failed]
+        subtotal:
+          type: number
+          format: double
+        taxAmount:
+          type: number
+          format: double
+        shippingCost:
+          type: number
+          format: double
+        totalAmount:
+          type: number
+          format: double
+        currency:
+          type: string
+          default: EUR
+        notes:
+          type: string
+        createdAt:
+          type: string
+          format: date-time
+        updatedAt:
+          type: string
+          format: date-time
+
+    OrderSummary:
+      type: object
+      properties:
+        orderId:
+          type: string
+        buyerId:
+          type: string
+        buyerName:
+          type: string
+        status:
+          $ref: '#/components/schemas/OrderStatus'
+        totalAmount:
+          type: number
+        currency:
+          type: string
+        itemCount:
+          type: integer
+        createdAt:
+          type: string
+          format: date-time
+
+    OrderStatus:
+      type: string
+      enum:
+        - draft
+        - placed
+        - confirmed
+        - picking
+        - packed
+        - shipped
+        - in_transit
+        - out_for_delivery
+        - delivered
+        - cancelled
+        - returned
+        - refunded
+
+    OrderLine:
+      type: object
+      required: [lineId, productId, quantity, unitPrice]
+      properties:
+        lineId:
+          type: string
+        productId:
+          type: string
+        productName:
+          type: string
+        sku:
+          type: string
+        quantity:
+          type: integer
+          minimum: 1
+        unitPrice:
+          type: number
+          format: double
+        discount:
+          type: number
+          format: double
+          default: 0
+        lineTotal:
+          type: number
+          format: double
+        warehouseId:
+          type: string
+          description: Which warehouse fulfills this line
+        stockStatus:
+          type: string
+          enum: [available, reserved, backordered, out_of_stock]
+
+    Address:
+      type: object
+      required: [line1, city, postalCode, country]
+      properties:
+        line1:
+          type: string
+        line2:
+          type: string
+        city:
+          type: string
+        state:
+          type: string
+        postalCode:
+          type: string
+        country:
+          type: string
+          description: ISO 3166-1 alpha-2
+        phone:
+          type: string
+        contactName:
+          type: string
+        deliveryInstructions:
+          type: string
+        isCommercial:
+          type: boolean
+          default: false
+        taxId:
+          type: string
+          description: VAT number for commercial addresses
+
+    ShipmentInfo:
+      type: object
+      properties:
+        shipmentId:
+          type: string
+        orderId:
+          type: string
+        carrierId:
+          type: string
+        carrierName:
+          type: string
+        trackingNumber:
+          type: string
+        status:
+          type: string
+          enum: [pending, picked_up, in_transit, out_for_delivery, delivered, failed]
+        estimatedDelivery:
+          type: string
+          format: date
+        actualDelivery:
+          type: string
+          format: date
+        shippingAddress:
+          $ref: '#/components/schemas/Address'
+
+    Invoice:
+      type: object
+      properties:
+        invoiceId:
+          type: string
+        invoiceNumber:
+          type: string
+        orderId:
+          type: string
+        buyerId:
+          type: string
+        billingAddress:
+          $ref: '#/components/schemas/Address'
+        lines:
+          type: array
+          items:
+            type: object
+            properties:
+              description:
+                type: string
+              quantity:
+                type: integer
+              unitPrice:
+                type: number
+              total:
+                type: number
+        subtotal:
+          type: number
+        taxAmount:
+          type: number
+        totalAmount:
+          type: number
+        currency:
+          type: string
+        issuedAt:
+          type: string
+          format: date-time
+        dueDate:
+          type: string
+          format: date
+        status:
+          type: string
+          enum: [draft, issued, paid, overdue, void]
+
+    CreateOrderRequest:
+      type: object
+      required: [buyerId, lines, shippingAddress]
+      properties:
+        buyerId:
+          type: string
+        lines:
+          type: array
+          items:
+            type: object
+            required: [productId, quantity]
+            properties:
+              productId:
+                type: string
+              quantity:
+                type: integer
+                minimum: 1
+        shippingAddress:
+          $ref: '#/components/schemas/Address'
+        billingAddress:
+          $ref: '#/components/schemas/Address'
+        paymentMethod:
+          type: string
+          enum: [credit_card, debit_card, paypal, bank_transfer, store_credit]
+        notes:
+          type: string
+
+    AddLineRequest:
+      type: object
+      required: [productId, quantity]
+      properties:
+        productId:
+          type: string
+        quantity:
+          type: integer
+          minimum: 1
+
+    Pagination:
+      type: object
+      properties:
+        page:
+          type: integer
+        pageSize:
+          type: integer
+        totalItems:
+          type: integer
+        totalPages:
+          type: integer

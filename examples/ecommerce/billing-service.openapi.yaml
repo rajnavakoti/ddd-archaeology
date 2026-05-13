@@ -1,0 +1,520 @@
+openapi: 3.0.3
+info:
+  title: Billing & Payments Service API
+  description: Payment processing, invoicing, refunds, and financial operations
+  version: 1.5.2
+  contact:
+    name: Payments Team
+    email: payments@acme-retail.internal
+
+paths:
+  /api/v1/payments:
+    post:
+      summary: Process a payment
+      operationId: processPayment
+      tags: [payments]
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/PaymentRequest'
+      responses:
+        '201':
+          description: Payment processed
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Payment'
+
+  /api/v1/payments/{paymentId}:
+    get:
+      summary: Get payment details
+      operationId: getPayment
+      tags: [payments]
+      parameters:
+        - name: paymentId
+          in: path
+          required: true
+          schema:
+            type: string
+      responses:
+        '200':
+          description: Payment details
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Payment'
+
+  /api/v1/accounts/{accountId}/payments:
+    get:
+      summary: Get payment history for an account
+      operationId: getAccountPayments
+      tags: [payments]
+      parameters:
+        - name: accountId
+          in: path
+          required: true
+          schema:
+            type: string
+        - name: from
+          in: query
+          schema:
+            type: string
+            format: date
+        - name: to
+          in: query
+          schema:
+            type: string
+            format: date
+      responses:
+        '200':
+          description: Payment history
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/PaymentSummary'
+
+  /api/v1/invoices:
+    post:
+      summary: Generate an invoice
+      operationId: createInvoice
+      tags: [invoices]
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/CreateInvoiceRequest'
+      responses:
+        '201':
+          description: Invoice created
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Invoice'
+
+  /api/v1/invoices/{invoiceId}:
+    get:
+      summary: Get invoice details
+      operationId: getInvoice
+      tags: [invoices]
+      parameters:
+        - name: invoiceId
+          in: path
+          required: true
+          schema:
+            type: string
+      responses:
+        '200':
+          description: Invoice details
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Invoice'
+
+  /api/v1/invoices/{invoiceId}/pdf:
+    get:
+      summary: Download invoice as PDF
+      operationId: getInvoicePdf
+      tags: [invoices]
+      parameters:
+        - name: invoiceId
+          in: path
+          required: true
+          schema:
+            type: string
+      responses:
+        '200':
+          description: Invoice PDF
+          content:
+            application/pdf:
+              schema:
+                type: string
+                format: binary
+
+  /api/v1/refunds:
+    post:
+      summary: Process a refund
+      operationId: processRefund
+      tags: [refunds]
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/RefundRequest'
+      responses:
+        '201':
+          description: Refund processed
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Refund'
+
+  /api/v1/accounts/{accountId}/balance:
+    get:
+      summary: Get account balance (store credit)
+      operationId: getBalance
+      tags: [accounts]
+      parameters:
+        - name: accountId
+          in: path
+          required: true
+          schema:
+            type: string
+      responses:
+        '200':
+          description: Account balance
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/AccountBalance'
+
+  /api/v1/accounts/{accountId}/credit:
+    post:
+      summary: Add store credit to account
+      operationId: addCredit
+      tags: [accounts]
+      parameters:
+        - name: accountId
+          in: path
+          required: true
+          schema:
+            type: string
+      requestBody:
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [amount, reason]
+              properties:
+                amount:
+                  type: number
+                  format: double
+                currency:
+                  type: string
+                reason:
+                  type: string
+                  enum: [refund, goodwill, promotion, loyalty_redemption]
+                referenceId:
+                  type: string
+                  description: Related order or refund ID
+      responses:
+        '200':
+          description: Credit added
+
+components:
+  schemas:
+    Payment:
+      type: object
+      required: [paymentId, orderId, amount, status]
+      properties:
+        paymentId:
+          type: string
+          format: uuid
+        orderId:
+          type: string
+        accountId:
+          type: string
+          description: The customer account being charged
+        accountEmail:
+          type: string
+        method:
+          $ref: '#/components/schemas/PaymentMethod'
+        amount:
+          type: number
+          format: double
+        currency:
+          type: string
+        status:
+          type: string
+          enum: [pending, authorized, captured, failed, cancelled]
+        gatewayRef:
+          type: string
+          description: External payment gateway reference
+        cardLast4:
+          type: string
+        cardBrand:
+          type: string
+          enum: [visa, mastercard, amex, discover]
+        billingAddress:
+          $ref: '#/components/schemas/BillingAddress'
+        riskScore:
+          type: number
+          description: Fraud risk score 0-100
+        processedAt:
+          type: string
+          format: date-time
+        createdAt:
+          type: string
+          format: date-time
+
+    PaymentSummary:
+      type: object
+      properties:
+        paymentId:
+          type: string
+        orderId:
+          type: string
+        amount:
+          type: number
+        currency:
+          type: string
+        status:
+          type: string
+        method:
+          type: string
+        processedAt:
+          type: string
+          format: date-time
+
+    PaymentMethod:
+      type: string
+      enum:
+        - credit_card
+        - debit_card
+        - paypal
+        - bank_transfer
+        - store_credit
+        - klarna
+        - ideal
+
+    Invoice:
+      type: object
+      properties:
+        invoiceId:
+          type: string
+          format: uuid
+        invoiceNumber:
+          type: string
+          description: Human-readable invoice number (e.g., INV-2026-001234)
+        orderId:
+          type: string
+        accountId:
+          type: string
+        accountName:
+          type: string
+        accountEmail:
+          type: string
+        billingAddress:
+          $ref: '#/components/schemas/BillingAddress'
+        lineItems:
+          type: array
+          items:
+            $ref: '#/components/schemas/InvoiceLineItem'
+        subtotal:
+          type: number
+          format: double
+        taxRate:
+          type: number
+          format: double
+        taxAmount:
+          type: number
+          format: double
+        shippingAmount:
+          type: number
+          format: double
+        discountAmount:
+          type: number
+          format: double
+        totalAmount:
+          type: number
+          format: double
+        currency:
+          type: string
+        status:
+          type: string
+          enum: [draft, issued, sent, paid, overdue, void, disputed]
+        issuedAt:
+          type: string
+          format: date-time
+        dueDate:
+          type: string
+          format: date
+        paidAt:
+          type: string
+          format: date-time
+        paymentId:
+          type: string
+          description: Link to the payment that settled this invoice
+
+    InvoiceLineItem:
+      type: object
+      properties:
+        sku:
+          type: string
+        description:
+          type: string
+        quantity:
+          type: integer
+        unitPrice:
+          type: number
+          format: double
+        discount:
+          type: number
+          format: double
+        taxRate:
+          type: number
+          format: double
+        lineTotal:
+          type: number
+          format: double
+
+    BillingAddress:
+      type: object
+      required: [fullName, addressLine1, city, postalCode, country]
+      properties:
+        fullName:
+          type: string
+        companyName:
+          type: string
+        addressLine1:
+          type: string
+        addressLine2:
+          type: string
+        city:
+          type: string
+        stateProvince:
+          type: string
+        postalCode:
+          type: string
+        country:
+          type: string
+        vatNumber:
+          type: string
+          description: EU VAT registration number
+        email:
+          type: string
+          format: email
+
+    Refund:
+      type: object
+      properties:
+        refundId:
+          type: string
+          format: uuid
+        paymentId:
+          type: string
+        orderId:
+          type: string
+        accountId:
+          type: string
+        amount:
+          type: number
+          format: double
+        currency:
+          type: string
+        reason:
+          type: string
+          enum: [customer_request, defective, wrong_item, never_received, duplicate, fraud]
+        method:
+          type: string
+          enum: [original_payment, store_credit, bank_transfer]
+        status:
+          type: string
+          enum: [pending, approved, processed, rejected]
+        approvedBy:
+          type: string
+        processedAt:
+          type: string
+          format: date-time
+        createdAt:
+          type: string
+          format: date-time
+
+    RefundRequest:
+      type: object
+      required: [paymentId, amount, reason]
+      properties:
+        paymentId:
+          type: string
+        orderId:
+          type: string
+        accountId:
+          type: string
+        amount:
+          type: number
+          format: double
+        reason:
+          type: string
+          enum: [customer_request, defective, wrong_item, never_received, duplicate, fraud]
+        method:
+          type: string
+          enum: [original_payment, store_credit, bank_transfer]
+        notes:
+          type: string
+
+    AccountBalance:
+      type: object
+      properties:
+        accountId:
+          type: string
+        availableCredit:
+          type: number
+          format: double
+        currency:
+          type: string
+        pendingRefunds:
+          type: number
+          format: double
+        lastUpdated:
+          type: string
+          format: date-time
+
+    CreateInvoiceRequest:
+      type: object
+      required: [orderId, accountId]
+      properties:
+        orderId:
+          type: string
+        accountId:
+          type: string
+        accountName:
+          type: string
+        accountEmail:
+          type: string
+        billingAddress:
+          $ref: '#/components/schemas/BillingAddress'
+        lineItems:
+          type: array
+          items:
+            $ref: '#/components/schemas/InvoiceLineItem'
+        taxRate:
+          type: number
+        shippingAmount:
+          type: number
+        discountAmount:
+          type: number
+        dueInDays:
+          type: integer
+          default: 30
+        notes:
+          type: string
+
+    PaymentRequest:
+      type: object
+      required: [orderId, accountId, amount, method]
+      properties:
+        orderId:
+          type: string
+        accountId:
+          type: string
+        amount:
+          type: number
+          format: double
+        currency:
+          type: string
+          default: EUR
+        method:
+          $ref: '#/components/schemas/PaymentMethod'
+        cardToken:
+          type: string
+          description: Tokenized card from payment gateway
+        billingAddress:
+          $ref: '#/components/schemas/BillingAddress'
+        returnUrl:
+          type: string
+          description: Redirect URL after external payment (PayPal, Klarna, iDEAL)
