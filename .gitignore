@@ -1,11 +1,16 @@
 # Talk prep — not public
 docs/exhibit-a-story-script.md
 
+# Generated output (root level only)
+/output/
+
 # Python
 __pycache__/
 *.pyc
 .venv/
 *.egg-info/
+dist/
+build/
 
 # OS
 .DS_Store
