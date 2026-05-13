@@ -1,11 +1,11 @@
 openapi: 3.0.3
 info:
-  title: Order Service API
-  description: Manages order lifecycle for the e-commerce platform
+  title: Shipment Service API
+  description: Manages shipment lifecycle for the delivery platform
   version: 2.4.1
   contact:
-    name: Order Squad
-    email: order-squad@acme-retail.internal
+    name: Fulfilment Squad
+    email: fulfilment@acme-logistics.internal
 
 paths:
   /api/v2/orders:

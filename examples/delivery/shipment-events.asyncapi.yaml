@@ -1,11 +1,11 @@
 asyncapi: 2.6.0
 info:
-  title: Order Domain Events
-  description: Events published by the Order service to the platform event bus
+  title: Shipment Domain Events
+  description: Events published by the Shipment service to the platform event bus
   version: 2.1.0
   contact:
-    name: Order Squad
-    email: order-squad@acme-retail.internal
+    name: Fulfilment Squad
+    email: fulfilment@acme-logistics.internal
 
 channels:
   orders.placed:

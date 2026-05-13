@@ -1,11 +1,11 @@
 openapi: 3.0.3
 info:
-  title: Billing & Payments Service API
+  title: Invoicing & Payments Service API
   description: Payment processing, invoicing, refunds, and financial operations
   version: 1.5.2
   contact:
-    name: Payments Team
-    email: payments@acme-retail.internal
+    name: Finance Platform Team
+    email: finance-platform@acme-logistics.internal
 
 paths:
   /api/v1/payments:

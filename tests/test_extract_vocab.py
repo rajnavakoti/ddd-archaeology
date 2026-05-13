@@ -8,7 +8,7 @@ from ddd_archaeology.phases.extract_vocab import extract_vocabulary
 from ddd_archaeology.output.writer import _to_serializable
 
 
-EXAMPLES_DIR = Path(__file__).parent.parent / "examples" / "ecommerce"
+EXAMPLES_DIR = Path(__file__).parent.parent / "examples" / "delivery"
 
 
 def _get_inventory() -> list[dict]:
@@ -110,7 +110,7 @@ def test_buyer_id_comes_from_order_service():
     entries = extract_vocabulary(inventory)
     buyer_ids = [e for e in entries if e.term == "buyerId"]
     services = {e.source_service for e in buyer_ids}
-    assert "Order Service API" in services or any("Order" in s for s in services)
+    assert "Shipment Service API" in services or any("Shipment" in s for s in services)
 
 
 def test_vocabulary_has_multiple_person_names():

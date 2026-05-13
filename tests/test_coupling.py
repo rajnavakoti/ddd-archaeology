@@ -10,7 +10,7 @@ from ddd_archaeology.phases.analyze_coupling import analyze_coupling, _deseriali
 from ddd_archaeology.output.writer import _to_serializable
 
 
-EXAMPLES_DIR = Path(__file__).parent.parent / "examples" / "ecommerce"
+EXAMPLES_DIR = Path(__file__).parent.parent / "examples" / "delivery"
 
 
 def _get_entities():
@@ -31,7 +31,7 @@ def test_order_references_customer():
     id_refs = [e for e in result.edges if e.coupling_type == CouplingType.ID_REFERENCE]
     order_to_customer = [
         e for e in id_refs
-        if "Order" in e.source_service and "Customer" in e.target_service
+        if "Shipment" in e.source_service and "Consignee" in e.target_service
     ]
     assert len(order_to_customer) > 0
 
@@ -41,7 +41,7 @@ def test_order_references_inventory():
     id_refs = [e for e in result.edges if e.coupling_type == CouplingType.ID_REFERENCE]
     order_to_inventory = [
         e for e in id_refs
-        if "Order" in e.source_service and "Inventory" in e.target_service
+        if "Shipment" in e.source_service and "Inventory" in e.target_service
     ]
     assert len(order_to_inventory) > 0
 
@@ -60,28 +60,28 @@ def test_finds_event_publishing():
     event_pubs = [e for e in result.edges if e.coupling_type == CouplingType.EVENT_PUBLISH]
     assert len(event_pubs) > 0
     publishers = {e.source_service for e in event_pubs}
-    assert any("Order" in p for p in publishers)
-    assert any("Shipping" in p for p in publishers)
+    assert any("Shipment" in p for p in publishers)
+    assert any("Carrier" in p for p in publishers)
 
 
 def test_identifies_silent_services():
     result = analyze_coupling(_get_entities())
     assert len(result.silent_services) > 0
-    # Customer and Billing publish no events
+    # Consignee and Invoicing publish no events
     silent_names = " ".join(result.silent_services)
-    assert "Customer" in silent_names
-    assert "Billing" in silent_names
+    assert "Consignee" in silent_names
+    assert "Invoicing" in silent_names
 
 
 def test_detects_circular_dependencies():
     result = analyze_coupling(_get_entities())
-    # Order and Shipping have circular coupling
+    # Shipment and Carrier have circular coupling
     found_circular = False
     for pair in result.circular_deps:
         combined = pair[0] + pair[1]
-        if "Order" in combined and "Shipping" in combined:
+        if "Shipment" in combined and "Carrier" in combined:
             found_circular = True
-    assert found_circular, f"Expected Order-Shipping circular dep, got: {result.circular_deps}"
+    assert found_circular, f"Expected Shipment-Carrier circular dep, got: {result.circular_deps}"
 
 
 def test_service_list_populated():

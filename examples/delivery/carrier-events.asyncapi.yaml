@@ -1,11 +1,11 @@
 asyncapi: 2.6.0
 info:
-  title: Shipping Domain Events
-  description: Events published by the Shipping service for shipment lifecycle
+  title: Carrier Domain Events
+  description: Events published by the Carrier Integration service for delivery lifecycle
   version: 1.3.0
   contact:
-    name: Logistics Squad
-    email: logistics@acme-retail.internal
+    name: Carrier Platform Team
+    email: carrier-platform@acme-logistics.internal
 
 channels:
   shipments.created:

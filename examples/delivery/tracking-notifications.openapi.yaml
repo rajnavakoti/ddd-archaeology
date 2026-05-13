@@ -1,11 +1,11 @@
 openapi: 3.0.3
 info:
-  title: Notification Service API
+  title: Tracking Notifications Service API
   description: Email, SMS, and push notification delivery for all platform events
   version: 1.2.0
   contact:
     name: Platform Team
-    email: platform@acme-retail.internal
+    email: platform@acme-logistics.internal
 
 paths:
   /api/v1/notifications:

@@ -27,23 +27,23 @@ See [docs/chain-of-thought.md](docs/chain-of-thought.md) for the full reasoning 
 
 ## Examples
 
-The `examples/ecommerce/` directory contains a synthetic e-commerce domain with deliberate architectural signals:
+The `examples/delivery/` directory contains a synthetic delivery platform domain with deliberate architectural signals:
 
-- **6 OpenAPI specs** — Order, Customer, Inventory, Shipping, Billing, Notification services
-- **2 AsyncAPI specs** — Order and Shipping domain events
-- **1 GraphQL schema** — Storefront BFF aggregating multiple backends
+- **6 OpenAPI specs** — Shipment, Consignee, Inventory, Carrier Integration, Invoicing, Tracking Notifications
+- **2 AsyncAPI specs** — Shipment and Carrier domain events
+- **1 GraphQL schema** — Tracking Portal BFF aggregating multiple backends
 
 ### Signals embedded in the example:
 
 | Signal | Where |
 |--------|-------|
-| Vocabulary drift | 5 names for the same person: buyer, customer, user, recipient, account |
-| God entity | Order schema coupled to 4 other contexts |
-| Hidden coupling | Order → Shipping/Billing/Inventory data embedded |
-| Dead boundary | Order + Shipping tightly intertwined |
+| Vocabulary drift | 6 names for the same person: buyer, customer, user, recipient, account |
+| God entity | Shipment schema coupled to 4 other contexts |
+| Hidden coupling | Shipment → Carrier/Invoicing/Inventory data embedded |
+| Dead boundary | Shipment + Carrier tightly intertwined |
 | Duplicate ownership | Shipment and Invoice owned by two services each |
 | Same name, different concept | Address in 4 services with 4 different shapes |
-| Infrastructure as domain | Notification Service coupled to everything |
+| Infrastructure as domain | Tracking Notifications coupled to everything |
 | Event naming patterns | Channel prefixes reveal context boundaries |
 
 ## Structure
@@ -51,20 +51,22 @@ The `examples/ecommerce/` directory contains a synthetic e-commerce domain with 
 ```
 ddd-archaeology/
 ├── docs/
-│   └── chain-of-thought.md     # Full reasoning process
+│   ├── chain-of-thought.md       # Full reasoning process
+│   └── exhibit-a-qa-draft.md     # 35 battle-tested Q&A answers
 ├── examples/
-│   └── ecommerce/              # Synthetic contracts with embedded signals
-│       ├── order-service.openapi.yaml
-│       ├── customer-service.openapi.yaml
+│   └── delivery/                 # Synthetic contracts with embedded signals
+│       ├── shipment-service.openapi.yaml
+│       ├── consignee-service.openapi.yaml
 │       ├── inventory-service.openapi.yaml
-│       ├── shipping-service.openapi.yaml
-│       ├── billing-service.openapi.yaml
-│       ├── notification-service.openapi.yaml
-│       ├── order-events.asyncapi.yaml
-│       ├── shipping-events.asyncapi.yaml
-│       └── storefront.graphql
-├── scripts/                    # (coming) Automation for Phases 1-6
-└── agents/                     # (coming) AI agent skills for Phases 7-8
+│       ├── carrier-service.openapi.yaml
+│       ├── invoicing-service.openapi.yaml
+│       ├── tracking-notifications.openapi.yaml
+│       ├── shipment-events.asyncapi.yaml
+│       ├── carrier-events.asyncapi.yaml
+│       └── tracking-portal.graphql
+├── src/ddd_archaeology/          # Automation scripts (Phases 1-6)
+├── .claude/skills/               # Agent skills (Phases 7-8)
+└── .claude/rules/                # DDD reasoning conventions
 ```
 
 ## Who Is This For?

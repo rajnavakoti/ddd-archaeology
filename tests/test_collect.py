@@ -6,7 +6,7 @@ from ddd_archaeology.models import Confidence, ContractType
 from ddd_archaeology.phases.collect import collect_contracts, _score_confidence
 
 
-EXAMPLES_DIR = Path(__file__).parent.parent / "examples" / "ecommerce"
+EXAMPLES_DIR = Path(__file__).parent.parent / "examples" / "delivery"
 
 
 def test_collect_finds_all_contracts():
@@ -34,13 +34,13 @@ def test_collect_identifies_graphql():
 
 def test_openapi_endpoint_count():
     contracts = collect_contracts(EXAMPLES_DIR)
-    order = next(c for c in contracts if "Order Service" in c.service_name and c.contract_type == ContractType.OPENAPI)
+    order = next(c for c in contracts if "Shipment Service" in c.service_name and c.contract_type == ContractType.OPENAPI)
     assert order.endpoint_count == 7
 
 
 def test_asyncapi_channel_count():
     contracts = collect_contracts(EXAMPLES_DIR)
-    order_events = next(c for c in contracts if "Order Domain" in c.service_name)
+    order_events = next(c for c in contracts if "Shipment Domain" in c.service_name)
     assert order_events.channel_count == 6
 
 
