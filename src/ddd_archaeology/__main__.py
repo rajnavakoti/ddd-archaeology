@@ -8,6 +8,7 @@ from ddd_archaeology.phases.extract_vocab import run as run_extract_vocab
 from ddd_archaeology.phases.discover_entities import run as run_discover_entities
 from ddd_archaeology.phases.compare import run as run_compare
 from ddd_archaeology.phases.analyze_coupling import run as run_coupling
+from ddd_archaeology.phases.schema_archaeology import run as run_schema
 
 
 def main() -> int:
@@ -43,6 +44,13 @@ def main() -> int:
     p_coupling.add_argument("--output", "-o", default="output/coupling.json", help="Output path for coupling JSON")
     p_coupling.add_argument("--html", default="output/heatmap.html", help="Output path for heatmap HTML")
 
+    # Exhibit B: schema-archaeology
+    p_schema = sub.add_parser("schema-archaeology", help="Exhibit B — analyze database schema and access patterns")
+    p_schema.add_argument("access_log", help="Path to access_log.json (table access patterns)")
+    p_schema.add_argument("service_users", help="Path to service_users.json (db user → service mapping)")
+    p_schema.add_argument("--schema-sql", default=None, help="Path to schema.sql for DDL analysis")
+    p_schema.add_argument("--output", "-o", default="output/schema_archaeology.json", help="Output path")
+
     args = parser.parse_args()
 
     commands = {
@@ -51,6 +59,7 @@ def main() -> int:
         "discover-entities": run_discover_entities,
         "compare": run_compare,
         "analyze-coupling": run_coupling,
+        "schema-archaeology": run_schema,
     }
 
     return commands[args.command](args)

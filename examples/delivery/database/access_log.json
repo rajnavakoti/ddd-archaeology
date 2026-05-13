@@ -1,0 +1,45 @@
+[
+  {"db_user": "svc_shipment", "table": "orders", "access_type": "WRITE", "daily_queries": 15000},
+  {"db_user": "svc_shipment", "table": "order_lines", "access_type": "WRITE", "daily_queries": 45000},
+  {"db_user": "svc_shipment", "table": "orders", "access_type": "READ", "daily_queries": 25000},
+  {"db_user": "svc_shipment", "table": "inventory_reserved", "access_type": "WRITE", "daily_queries": 8000},
+  {"db_user": "svc_shipment", "table": "customer_addresses", "access_type": "READ", "daily_queries": 12000},
+  {"db_user": "svc_shipment", "table": "shipment_status", "access_type": "READ", "daily_queries": 5000},
+
+  {"db_user": "svc_consignee", "table": "customers", "access_type": "WRITE", "daily_queries": 3000},
+  {"db_user": "svc_consignee", "table": "customers", "access_type": "READ", "daily_queries": 20000},
+  {"db_user": "svc_consignee", "table": "customer_addresses", "access_type": "WRITE", "daily_queries": 2000},
+  {"db_user": "svc_consignee", "table": "customer_addresses", "access_type": "READ", "daily_queries": 8000},
+
+  {"db_user": "svc_inventory", "table": "warehouses", "access_type": "WRITE", "daily_queries": 50},
+  {"db_user": "svc_inventory", "table": "warehouses", "access_type": "READ", "daily_queries": 5000},
+  {"db_user": "svc_inventory", "table": "stock_levels", "access_type": "WRITE", "daily_queries": 10000},
+  {"db_user": "svc_inventory", "table": "stock_levels", "access_type": "READ", "daily_queries": 30000},
+  {"db_user": "svc_inventory", "table": "inventory_reserved", "access_type": "WRITE", "daily_queries": 7000},
+  {"db_user": "svc_inventory", "table": "inventory_reserved", "access_type": "READ", "daily_queries": 15000},
+
+  {"db_user": "svc_carrier", "table": "carriers", "access_type": "WRITE", "daily_queries": 10},
+  {"db_user": "svc_carrier", "table": "carriers", "access_type": "READ", "daily_queries": 3000},
+  {"db_user": "svc_carrier", "table": "shipments", "access_type": "WRITE", "daily_queries": 12000},
+  {"db_user": "svc_carrier", "table": "shipments", "access_type": "READ", "daily_queries": 20000},
+  {"db_user": "svc_carrier", "table": "shipment_status", "access_type": "WRITE", "daily_queries": 35000},
+  {"db_user": "svc_carrier", "table": "orders", "access_type": "READ", "daily_queries": 10000},
+  {"db_user": "svc_carrier", "table": "customer_addresses", "access_type": "READ", "daily_queries": 8000},
+
+  {"db_user": "svc_invoicing", "table": "invoices", "access_type": "WRITE", "daily_queries": 5000},
+  {"db_user": "svc_invoicing", "table": "invoices", "access_type": "READ", "daily_queries": 15000},
+  {"db_user": "svc_invoicing", "table": "payments", "access_type": "WRITE", "daily_queries": 5000},
+  {"db_user": "svc_invoicing", "table": "payments", "access_type": "READ", "daily_queries": 10000},
+  {"db_user": "svc_invoicing", "table": "payment_ledger", "access_type": "WRITE", "daily_queries": 8000},
+  {"db_user": "svc_invoicing", "table": "refunds", "access_type": "WRITE", "daily_queries": 500},
+  {"db_user": "svc_invoicing", "table": "orders", "access_type": "READ", "daily_queries": 5000},
+  {"db_user": "svc_invoicing", "table": "customer_addresses", "access_type": "READ", "daily_queries": 4000},
+
+  {"db_user": "svc_reporting", "table": "orders", "access_type": "READ", "daily_queries": 2000},
+  {"db_user": "svc_reporting", "table": "payment_ledger", "access_type": "READ", "daily_queries": 3000},
+  {"db_user": "svc_reporting", "table": "shipments", "access_type": "READ", "daily_queries": 1500},
+  {"db_user": "svc_reporting", "table": "customers", "access_type": "READ", "daily_queries": 1000},
+
+  {"db_user": "svc_etl_legacy", "table": "orders", "access_type": "READ", "daily_queries": 200},
+  {"db_user": "svc_vendor_sync", "table": "orders", "access_type": "READ", "daily_queries": 50}
+]
