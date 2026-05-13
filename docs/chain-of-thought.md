@@ -18,7 +18,7 @@ This process can be applied manually by an architect, automated via scripts (Pha
 **Process:**
 1. Gather all contract files within the domain scope (OpenAPI YAML/JSON, AsyncAPI YAML, GraphQL SDL files)
 2. Parse and normalize into a common inventory
-3. Record: service name, owning team, version, contract type, endpoint/channel/operation count, schema count
+3. Record: service name, owning team, version, contract type, endpoint/channel/operation count, schema count, **last modified date** (git commit timestamp of the spec file), **current owning team** (may differ from the team in the spec's `contact` field)
 
 **Thought process:**
 - Which services have broken backward compatibility? (URL path version v2+ = something changed structurally enough that callers couldn't just upgrade. Worth investigating what changed — don't assume it means "major domain redesign," it could be a schema break, migration, or convention change. The signal is "something significant happened here")
@@ -28,7 +28,9 @@ This process can be applied manually by an architect, automated via scripts (Pha
 - **HTTP method distribution:** If a service exposes only `GET` endpoints — no `POST`, `PUT`, `PATCH`, `DELETE` — it's a read model or projection, not a domain service. It likely has no aggregate roots, only queries. This is infrastructure (reporting, search, analytics), not a bounded context candidate. Conversely, a service with `POST` and `PATCH` on the same resource has a lifecycle — that's an aggregate with state transitions
 - **Error response uniformity:** Quick governance check — do all services return errors in the same shape? Uniform error schemas (`{ code, message, details }`) = platform-level governance exists. Divergent error shapes = independent teams with no shared conventions, implying weak integration governance. This tells you about org culture before you read a single endpoint
 
-**Output:** Contract inventory table — service, team, version, type, counts
+**Output:** Contract inventory table — service, team, version, type, counts, last modified date, confidence level. Every downstream finding inherits a confidence score: findings from contracts updated last week are high-confidence; findings from contracts last touched 18 months ago by a team that no longer exists are low-confidence hypotheses. This stratification turns findings into a methodology, not just a list
+
+**Quick staleness check without log mining:** If the repo has CI/CD, compare the spec file's last git commit timestamp to the service's overall commit activity. A spec file untouched for 14 months while the service had 80 commits = confirmed drift. This is visible in the repo itself — no production logs needed
 
 ---
 
