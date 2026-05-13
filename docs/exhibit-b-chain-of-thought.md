@@ -31,7 +31,7 @@ More importantly: **services can lie through their APIs but can't lie to the dat
 - If all services use the same database user → you can't distinguish who's accessing what. This is itself a finding: no database-level service isolation. Flag for infrastructure team
 - If services have dedicated users → you can correlate queries to services via `pg_stat_statements`, query logs, or connection pool metadata
 - Shared users (like a reporting user) should be tracked separately — they're read-only consumers, not domain services
-- **Legacy signal:** If a database user exists but no running service maps to it → that's a ghost service. The user was created for a service that was decommissioned but the access patterns may still exist in stored procedures or scheduled jobs
+- **Ghost services:** If a database user exists but no running service maps to it → that's a ghost service. In a 12-year-old vendor-built platform, ghost users are common and dangerous. They represent: decommissioned services whose scheduled jobs still run, ETL pipelines nobody documented, vendor tools "turned off" but whose credentials still work, or migration scripts that ran once in 2019 and were never cleaned up. A ghost user with WRITE access to a critical table is a hidden writer that won't appear in any service inventory or architecture diagram
 
 **Output:** Service → database user mapping table, with blind spots flagged
 
@@ -68,6 +68,8 @@ FROM service_table_access
 GROUP BY table_name, db_user, access_type
 ORDER BY query_count DESC;
 ```
+
+**SQL caveat:** This regex is illustrative — production use requires handling schema-qualified names (`schema.table`), CTEs, subquery aliases, and parameterized queries where table names may be in query templates rather than the executed text. The automation layer normalizes these before analysis.
 
 **Thought process:**
 - High-frequency reads from another service's table → tight runtime dependency. If that table's schema changes, the reading service breaks silently
@@ -119,8 +121,11 @@ ORDER BY query_count DESC;
 - **Status columns reveal domain lifecycles:** `order_status VARCHAR` with values like `draft, placed, confirmed, picking, packed, shipped, delivered, cancelled, returned` tells you the full lifecycle of the aggregate. Compare to the API's enum values (from Exhibit A) — differences reveal states that exist in the database but aren't exposed through the API
 - **Timestamp columns reveal domain events:** `created_at`, `confirmed_at`, `shipped_at`, `delivered_at` — each timestamp is an implicit domain event. If these timestamps exist but no corresponding events are published (from Exhibit A), the service is tracking lifecycle changes without announcing them
 - **Soft deletes vs hard deletes:** If a table uses `deleted_at` timestamps instead of actual DELETE, the domain considers these records valuable even after "deletion." This is often a regulatory or audit requirement that isn't visible in the API
+- **Fat tables (60+ columns):** A table with 60+ columns in a system supposedly decomposed into microservices is almost always a legacy monolith's core table that was never split. These are the database equivalent of a god entity — they accumulate every concept that was ever loosely related to the core domain object. Column count alone tells you where the next decomposition effort needs to start
+- **Indexes as query pattern fossils:** The indexes on a shared table tell you *how* each service uses it. If `orders` has indexes on `carrier_id`, `invoice_id`, and `warehouse_id`, those indexes are the database's memory of every service that was given read access. Each index is a fossil of a coupling decision. This is particularly valuable when `pg_stat_statements` history has been rotated — indexes persist long after query history is gone
+- **Table naming namespace violations:** In a well-governed database, tables are prefixed or schema-separated by owning service (`shipment_orders`, `carrier_tracking_events`). Tables with no clear ownership prefix — or tables prefixed with one service's namespace accessed by another service's user (e.g., `shipment_status` written by `svc_carrier`) — are namespace violations that signal the boundary was never real
 
-**Output:** Schema analysis report — foreign key map, lifecycle states, implicit events, cross-schema references
+**Output:** Schema analysis report — foreign key map, lifecycle states, implicit events, cross-schema references, fat table flags, index fossils, namespace violations
 
 ---
 
@@ -195,4 +200,5 @@ Always separate reads from writes in your analysis. A service reading another se
 - **Shared database users are blind spots.** If all services use the same `app_user`, you can't distinguish who's accessing what
 - **Stored procedures hide access patterns.** A stored procedure called by Service A might read tables from Service B's schema — this doesn't show up as Service A's access in all logging tools
 - **Read replicas complicate the picture.** If services read from a replica, the access may not show up in the primary's `pg_stat_statements`
-- **This technique only works for shared databases.** If each service has its own database (database-per-service pattern), there are no shared tables to find — which means the architecture already enforces boundaries at the data layer. That's itself a finding: the database boundaries are stronger than what Exhibit A's API contracts showed
+- **`pg_stat_statements` has a query cap.** Default is 5,000 tracked queries. On high-traffic systems processing millions of daily transactions, low-frequency but architecturally significant queries — batch jobs, end-of-day reconciliation, stored procedures — may be evicted. Supplement with slow query log analysis for a complete picture
+- **Database-per-service prevents direct sharing but not data duplication.** If each service has its own database, there are no shared tables — which is a strong architectural signal. But it doesn't prevent data duplication coupling, where services copy each other's data into their own database and keep it in sync via polling or events. The coupling exists at the data *model* level, not the database access level. If you have database-per-service, the shared table technique doesn't apply — move to data lineage tracing to find duplicated data patterns
