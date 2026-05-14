@@ -1,0 +1,20 @@
+[
+  {"event": "Order CREATED", "service": "shipment-service", "daily_count": 12034, "entity": "Order"},
+  {"event": "Inventory RESERVED", "service": "inventory-service", "daily_count": 11891, "entity": "Inventory"},
+  {"event": "Order CONFIRMED", "service": "shipment-service", "daily_count": 11756, "entity": "Order"},
+  {"event": "Invoice GENERATED", "service": "invoicing-service", "daily_count": 11402, "entity": "Invoice"},
+  {"event": "Email SENT (order_confirmed)", "service": "tracking-notifications", "daily_count": 11201, "entity": "Notification"},
+  {"event": "Shipment CREATED", "service": "carrier-integration", "daily_count": 10877, "entity": "Shipment"},
+  {"event": "Shipment PICKED_UP", "service": "carrier-integration", "daily_count": 10544, "entity": "Shipment"},
+  {"event": "Shipment IN_TRANSIT", "service": "carrier-integration", "daily_count": 10201, "entity": "Shipment"},
+  {"event": "Shipment DELIVERED", "service": "carrier-integration", "daily_count": 9234, "entity": "Shipment"},
+  {"event": "Order DELIVERED", "service": "shipment-service", "daily_count": 9198, "entity": "Order"},
+  {"event": "Email SENT (order_delivered)", "service": "tracking-notifications", "daily_count": 9145, "entity": "Notification"},
+  {"event": "Inventory RELEASED (cancelled)", "service": "inventory-service", "daily_count": 278, "entity": "Inventory"},
+  {"event": "Order CANCELLED", "service": "shipment-service", "daily_count": 278, "entity": "Order"},
+  {"event": "Refund PROCESSED", "service": "invoicing-service", "daily_count": 156, "entity": "Refund"},
+  {"event": "Shipment FAILED", "service": "carrier-integration", "daily_count": 89, "entity": "Shipment"},
+  {"event": "Shipment RETURNED", "service": "carrier-integration", "daily_count": 67, "entity": "Shipment"},
+  {"event": "Email SENT (delivery_failed)", "service": "tracking-notifications", "daily_count": 89, "entity": "Notification"},
+  {"event": "Inventory RESERVED (retry)", "service": "inventory-service", "daily_count": 34, "entity": "Inventory"}
+]

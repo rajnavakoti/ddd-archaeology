@@ -10,6 +10,7 @@ from ddd_archaeology.phases.compare import run as run_compare
 from ddd_archaeology.phases.analyze_coupling import run as run_coupling
 from ddd_archaeology.phases.schema_archaeology import run as run_schema
 from ddd_archaeology.phases.transaction_boundaries import run as run_transactions
+from ddd_archaeology.phases.log_mining import run as run_logs
 
 
 def main() -> int:
@@ -58,6 +59,12 @@ def main() -> int:
     p_txn.add_argument("--schema-archaeology", default=None, help="Path to schema_archaeology.json for table ownership")
     p_txn.add_argument("--output", "-o", default="output/transaction_boundaries.json", help="Output path")
 
+    # Exhibit D: log-mining
+    p_logs = sub.add_parser("log-mining", help="Exhibit D — recover fossilized domain events from logs")
+    p_logs.add_argument("trace", help="Path to trace JSONL file (single entity flow)")
+    p_logs.add_argument("--frequency", default=None, help="Path to event_frequency.json")
+    p_logs.add_argument("--output", "-o", default="output/log_mining.json", help="Output path")
+
     args = parser.parse_args()
 
     commands = {
@@ -68,6 +75,7 @@ def main() -> int:
         "analyze-coupling": run_coupling,
         "schema-archaeology": run_schema,
         "transaction-boundaries": run_transactions,
+        "log-mining": run_logs,
     }
 
     return commands[args.command](args)
