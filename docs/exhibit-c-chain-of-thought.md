@@ -29,6 +29,8 @@ In a legacy system where nobody explicitly designed aggregates, the transaction 
 3. **pg_stat_activity snapshots:** If you have periodic snapshots, correlate concurrent writes from the same backend PID
 4. **Application-level logging:** If ORM logs are available, extract transaction boundaries from the application's unit-of-work pattern
 
+4. **Static analysis (if source access available):** `@Transactional` annotations (Spring/Java), `atomic` blocks (Django), `using transaction.atomic()` (Python), `DbContext.SaveChanges()` scope (Entity Framework) — these are the developer's declared transaction boundaries. Static analysis of these annotations + the repository calls within them gives you the transaction clusters without any runtime data. This is the most reliable source when you have code access — it shows intent, not just behavior
+
 **Data needed per transaction:**
 - Transaction/trace ID
 - Service name (from APM service tag or database user)
