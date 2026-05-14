@@ -65,6 +65,8 @@ grep -h "ORD-2024-881742" \
   | sort -t'|' -k1
 ```
 
+**Timestamp normalization caveat:** In a 12-year-old platform, log formats from different teams rarely agree on timestamp format, timezone, or precision. You'll need to normalize timestamps across services before sorting. The automation layer handles this normalization. For manual analysis, convert everything to UTC ISO 8601 first.
+
 For centralized logging (ELK/Splunk):
 ```
 order_id:"ORD-2024-881742" | sort timestamp asc | table timestamp, service, message
@@ -149,7 +151,13 @@ grep -oE '(Order|Shipment|Invoice|Payment|Inventory|Customer|Refund)\s+[A-Z]+' \
 - **Missing events are action items.** If event storming said `PaymentCaptured` should happen but the logs show no payment event during order creation — either the team hasn't built it yet, or the business process works differently than assumed
 - **ES validation is the highest-value output of log mining.** This is what makes architects go "oh no" — the realization that the documented model and the production model diverge
 
-**Output:** Event storming validation report — documented events vs actual events, with specific discrepancies
+**Triage priority for discrepancies:**
+- **Wrong sequence** = highest priority. Mental model errors cause bugs in new features. Fix the model immediately
+- **Missing participants** = high priority. A service nobody knew about is a hidden dependency that blocks extraction
+- **Extra events** = medium priority. Good news — document them and add to the event catalog
+- **Missing events** = low priority unless they're in the critical path. Either the feature wasn't built or the business works differently than assumed
+
+**Output:** Event storming validation report — documented events vs actual events, with specific discrepancies prioritized by type
 
 ---
 
@@ -199,3 +207,12 @@ After Exhibit D, you have four independent evidence sources for each architectur
 - **Log lines ≠ events.** A log line is a developer's debug output. It may not capture domain intent — just "something happened." The human judgment step is deciding which log patterns are domain events and which are operational noise
 - **Sampling bias.** Tracing one entity gives you one flow. The system may have many flows. Trace at least 10 entities covering happy path, error path, and edge cases to get representative coverage. For frequency analysis, use the full log dataset
 - **Performance logs vs domain logs.** Filter out health checks, metrics, and infrastructure logs before analysis. They add noise without domain signal
+- **Log vocabulary ≠ domain vocabulary.** Legacy systems often use internal technical language in log messages, not ubiquitous language. "Processing entity state update" is not "OrderConfirmed." The domain vocabulary has to be mapped to the log vocabulary — and that mapping requires either code access or developer interviews. This is the one step in log mining that can't be automated and can't be skipped
+
+## Additional Signals
+
+### Retry patterns as boundary signals
+If you see a service log the same operation twice with a short gap — `Inventory RESERVED` at `09:14:03.000` and again at `09:14:03.847` — that's a retry. Retries in a synchronous chain are the loudest signal that the boundary should be async. The service was designed with the assumption that the downstream call could fail. That defensive coding is evidence of acknowledged coupling fragility. Only the logs show this — contracts, database, and transactions all miss it.
+
+### Log gaps as invisible participant evidence
+If an entity appears in Service A at `09:14:02` and next in Service C at `09:14:04` but no service logs anything at `09:14:03` — the gap itself is evidence. Either a service isn't logging, or there's a service in the flow that you don't have logs for. This connects to the "black box services" from Exhibit A's setup — their presence appears as unexplained gaps in the flows from services you CAN see
