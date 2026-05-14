@@ -1,0 +1,62 @@
+[
+  {
+    "tables_modified": ["orders", "order_lines", "order_audit"],
+    "occurrence_count": 84219,
+    "service_name": "Shipment Service",
+    "avg_duration_ms": 8
+  },
+  {
+    "tables_modified": ["shipments", "tracking_events"],
+    "occurrence_count": 31445,
+    "service_name": "Carrier Integration Service",
+    "avg_duration_ms": 6
+  },
+  {
+    "tables_modified": ["payment_ledger", "payment_events", "invoices"],
+    "occurrence_count": 9877,
+    "service_name": "Invoicing Service",
+    "avg_duration_ms": 12
+  },
+  {
+    "tables_modified": ["orders", "inventory_reserved"],
+    "occurrence_count": 4512,
+    "service_name": "Shipment Service",
+    "avg_duration_ms": 580
+  },
+  {
+    "tables_modified": ["inventory_reserved", "stock_levels"],
+    "occurrence_count": 3298,
+    "service_name": "Inventory Service",
+    "avg_duration_ms": 5
+  },
+  {
+    "tables_modified": ["orders", "shipments"],
+    "occurrence_count": 2103,
+    "service_name": "Shipment Service",
+    "avg_duration_ms": 45
+  },
+  {
+    "tables_modified": ["customers", "customer_addresses"],
+    "occurrence_count": 1890,
+    "service_name": "Consignee Service",
+    "avg_duration_ms": 4
+  },
+  {
+    "tables_modified": ["orders", "order_lines"],
+    "occurrence_count": 1205,
+    "service_name": "Shipment Service",
+    "avg_duration_ms": 7
+  },
+  {
+    "tables_modified": ["invoices", "refunds"],
+    "occurrence_count": 487,
+    "service_name": "Invoicing Service",
+    "avg_duration_ms": 15
+  },
+  {
+    "tables_modified": ["orders", "customers"],
+    "occurrence_count": 42,
+    "service_name": "Shipment Service",
+    "avg_duration_ms": 320
+  }
+]

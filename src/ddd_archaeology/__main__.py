@@ -9,6 +9,7 @@ from ddd_archaeology.phases.discover_entities import run as run_discover_entitie
 from ddd_archaeology.phases.compare import run as run_compare
 from ddd_archaeology.phases.analyze_coupling import run as run_coupling
 from ddd_archaeology.phases.schema_archaeology import run as run_schema
+from ddd_archaeology.phases.transaction_boundaries import run as run_transactions
 
 
 def main() -> int:
@@ -51,6 +52,12 @@ def main() -> int:
     p_schema.add_argument("--schema-sql", default=None, help="Path to schema.sql for DDL analysis")
     p_schema.add_argument("--output", "-o", default="output/schema_archaeology.json", help="Output path")
 
+    # Exhibit C: transaction-boundaries
+    p_txn = sub.add_parser("transaction-boundaries", help="Exhibit C — analyze transaction co-write patterns")
+    p_txn.add_argument("clusters", help="Path to transaction_clusters.json")
+    p_txn.add_argument("--schema-archaeology", default=None, help="Path to schema_archaeology.json for table ownership")
+    p_txn.add_argument("--output", "-o", default="output/transaction_boundaries.json", help="Output path")
+
     args = parser.parse_args()
 
     commands = {
@@ -60,6 +67,7 @@ def main() -> int:
         "compare": run_compare,
         "analyze-coupling": run_coupling,
         "schema-archaeology": run_schema,
+        "transaction-boundaries": run_transactions,
     }
 
     return commands[args.command](args)
