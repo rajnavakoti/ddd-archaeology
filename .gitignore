@@ -1,9 +1,6 @@
 # Talk prep — not public
-docs/exhibit-a-story-script.md
-docs/exhibit-b-story-script.md
-docs/exhibit-c-story-script.md
-docs/exhibit-d-story-script.md
-docs/exhibit-e-story-script.md
+docs/exhibit-*-story-script.md
+docs/exhibit-*-qa-draft.md
 
 # Generated output (root level only)
 /output/
