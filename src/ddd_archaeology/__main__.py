@@ -11,6 +11,7 @@ from ddd_archaeology.phases.analyze_coupling import run as run_coupling
 from ddd_archaeology.phases.schema_archaeology import run as run_schema
 from ddd_archaeology.phases.transaction_boundaries import run as run_transactions
 from ddd_archaeology.phases.log_mining import run as run_logs
+from ddd_archaeology.phases.incident_clustering import run as run_incidents
 
 
 def main() -> int:
@@ -65,6 +66,11 @@ def main() -> int:
     p_logs.add_argument("--frequency", default=None, help="Path to event_frequency.json")
     p_logs.add_argument("--output", "-o", default="output/log_mining.json", help="Output path")
 
+    # Exhibit E: incident-clustering
+    p_inc = sub.add_parser("incident-clustering", help="Exhibit E — analyze incident patterns at boundaries")
+    p_inc.add_argument("incidents", help="Path to incidents.json")
+    p_inc.add_argument("--output", "-o", default="output/incident_clustering.json", help="Output path")
+
     args = parser.parse_args()
 
     commands = {
@@ -76,6 +82,7 @@ def main() -> int:
         "schema-archaeology": run_schema,
         "transaction-boundaries": run_transactions,
         "log-mining": run_logs,
+        "incident-clustering": run_incidents,
     }
 
     return commands[args.command](args)
