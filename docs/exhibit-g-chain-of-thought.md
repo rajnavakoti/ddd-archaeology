@@ -52,6 +52,7 @@ ORDER BY occurrences DESC;
 - **Low-frequency (<100/year)** are edge case rules — often the most interesting for domain modeling because they encode rare but important business scenarios
 - **Errors with gaps in the timeline** (first_seen long ago, but only recent occurrences) may indicate reactivated rules or seasonal patterns
 - **Error codes that only appear in certain date ranges** may correspond to feature deployments — cross-reference with git history
+- **The first_seen date is the rule's birth certificate.** The frequency trend is the rule's health check. A rule that's been firing since 2013 at stable frequency is load-bearing — treat it like infrastructure. A rule that suddenly increased frequency in 2024 means something changed in the business or the code — find what triggered the change. Old rules that still fire are stable invariants. New rules are hypotheses still being tested
 
 **Output:** Error code inventory — code, message, frequency, affected entities, date range
 
@@ -84,6 +85,9 @@ ORDER BY occurrences DESC;
 - **Temporal rules encode SLAs and policies.** "Fulfilment window expired" means someone defined a pick SLA. What's the window? Who decided it? Is it configurable or hardcoded?
 - **Per-category rules reveal domain complexity.** "Return window differs by category" means the return policy context has more complexity than anyone described in event storming
 - **Escape hatches are always the most dangerous.** Any `if (override) skip_validation()` path needs an audit. What rules does it skip? Who can trigger it? Is it logged?
+
+**When code access isn't available — the ops interview pattern:**
+Don't ask "what does ORD-E003 mean?" They'll say "it's a price mismatch thing." Ask instead: "when you get ORD-E003, what do you do?" The answer tells you the rule from the exception side. "We usually just reprocess the order" → the threshold is too strict. "We call the customer to confirm the new price" → the threshold represents a customer communication boundary. "We escalate to the pricing team" → the threshold is a business authority boundary. The workaround describes the rule.
 
 **Output:** Error code → business rule mapping table
 
