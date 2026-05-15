@@ -1,6 +1,6 @@
 ---
 name: infer-boundaries
-description: "Phase 7 — Infer bounded context boundaries from contract archaeology outputs. Reads entity maps, coupling matrices, and vocabulary reports to propose a context map."
+description: "Exhibit A Phase 7 — Infer bounded context boundaries from contract archaeology outputs. For full multi-exhibit analysis, use /interpret-findings instead."
 model: sonnet
 argument-hint: "[path to output/ directory, default: output/]"
 ---

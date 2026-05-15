@@ -19,7 +19,13 @@ python -m ddd_archaeology analyze-coupling output/entities.json -o output/coupli
 ```
 
 Then invoke agent skills:
-- `/infer-boundaries` — Phase 7, reads output/*.json
+
+### Full Pipeline (recommended)
+- `/run-archaeology` — Orchestrates all 8 CLI tools, produces combined output
+- `/interpret-findings` — Reads all outputs, produces the definitive architecture assessment with convergence table, extraction readiness, and action plan
+
+### Exhibit A Only
+- `/infer-boundaries` — Phase 7, reads Exhibit A output/*.json
 - `/gap-analysis` — Phase 8, compares inferred map to documented architecture
 
 ## Conventions
