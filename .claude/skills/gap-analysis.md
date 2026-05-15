@@ -1,6 +1,6 @@
 ---
 name: gap-analysis
-description: "Phase 8 — Compare inferred context map against documented architecture. Produces a prioritized gap report with actionable recommendations."
+description: "Exhibit A Phase 8 — Compare inferred context map against documented architecture. For full multi-exhibit analysis, use /interpret-findings instead."
 model: sonnet
 argument-hint: "[path to documented architecture file, or 'none' to skip comparison]"
 ---
