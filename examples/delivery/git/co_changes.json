@@ -1,0 +1,14 @@
+[
+  {"file_a": "shipment-service/src/OrderService.java", "file_b": "shipment-service/src/OrderRepository.java", "co_changes": 134, "total_a": 154, "total_b": 142, "service_a": "shipment-service", "service_b": "shipment-service"},
+  {"file_a": "shipment-service/src/OrderController.java", "file_b": "carrier-integration/src/ShipmentService.java", "co_changes": 98, "total_a": 136, "total_b": 112, "service_a": "shipment-service", "service_b": "carrier-integration"},
+  {"file_a": "carrier-integration/src/DeliveryScheduler.java", "file_b": "inventory-service/src/InventoryChecker.java", "co_changes": 72, "total_a": 106, "total_b": 88, "service_a": "carrier-integration", "service_b": "inventory-service"},
+  {"file_a": "shipment-service/src/PricingEngine.java", "file_b": "shipment-service/src/OrderValidator.java", "co_changes": 67, "total_a": 124, "total_b": 98, "service_a": "shipment-service", "service_b": "shipment-service"},
+  {"file_a": "invoicing-service/src/InvoiceGenerator.java", "file_b": "shipment-service/src/OrderEventHandler.java", "co_changes": 43, "total_a": 105, "total_b": 78, "service_a": "invoicing-service", "service_b": "shipment-service"},
+  {"file_a": "shipment-service/src/OrderService.java", "file_b": "shipment-service/src/OrderValidator.java", "co_changes": 112, "total_a": 154, "total_b": 98, "service_a": "shipment-service", "service_b": "shipment-service"},
+  {"file_a": "carrier-integration/src/CarrierRateCalculator.java", "file_b": "carrier-integration/src/CarrierClient.java", "co_changes": 5, "total_a": 84, "total_b": 76, "service_a": "carrier-integration", "service_b": "carrier-integration"},
+  {"file_a": "consignee-service/src/CustomerAddressValidator.java", "file_b": "consignee-service/src/AddressRepository.java", "co_changes": 8, "total_a": 72, "total_b": 68, "service_a": "consignee-service", "service_b": "consignee-service"},
+  {"file_a": "tracking-notifications/src/NotificationTemplateRenderer.java", "file_b": "tracking-notifications/src/EmailSender.java", "co_changes": 6, "total_a": 66, "total_b": 58, "service_a": "tracking-notifications", "service_b": "tracking-notifications"},
+  {"file_a": "shipment-service/src/OrderController.java", "file_b": "inventory-service/src/ReservationService.java", "co_changes": 38, "total_a": 136, "total_b": 64, "service_a": "shipment-service", "service_b": "inventory-service"},
+  {"file_a": "carrier-integration/src/ShipmentService.java", "file_b": "carrier-integration/src/TrackingEventHandler.java", "co_changes": 89, "total_a": 112, "total_b": 95, "service_a": "carrier-integration", "service_b": "carrier-integration"},
+  {"file_a": "invoicing-service/src/PaymentProcessor.java", "file_b": "invoicing-service/src/InvoiceRepository.java", "co_changes": 76, "total_a": 88, "total_b": 82, "service_a": "invoicing-service", "service_b": "invoicing-service"}
+]
