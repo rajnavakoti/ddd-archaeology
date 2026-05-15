@@ -12,6 +12,8 @@ from ddd_archaeology.phases.schema_archaeology import run as run_schema
 from ddd_archaeology.phases.transaction_boundaries import run as run_transactions
 from ddd_archaeology.phases.log_mining import run as run_logs
 from ddd_archaeology.phases.incident_clustering import run as run_incidents
+from ddd_archaeology.phases.data_lineage import run as run_lineage
+from ddd_archaeology.phases.error_codes import run as run_errors
 
 
 def main() -> int:
@@ -66,6 +68,16 @@ def main() -> int:
     p_logs.add_argument("--frequency", default=None, help="Path to event_frequency.json")
     p_logs.add_argument("--output", "-o", default="output/log_mining.json", help="Output path")
 
+    # Exhibit G: error-codes
+    p_errors = sub.add_parser("error-codes", help="Exhibit G — decode error codes into business rules")
+    p_errors.add_argument("errors", help="Path to error_codes.json")
+    p_errors.add_argument("--output", "-o", default="output/error_codes.json", help="Output path")
+
+    # Exhibit F: data-lineage
+    p_lineage = sub.add_parser("data-lineage", help="Exhibit F — trace entity copies and find divergence")
+    p_lineage.add_argument("lineage", help="Path to data_lineage.json")
+    p_lineage.add_argument("--output", "-o", default="output/data_lineage.json", help="Output path")
+
     # Exhibit E: incident-clustering
     p_inc = sub.add_parser("incident-clustering", help="Exhibit E — analyze incident patterns at boundaries")
     p_inc.add_argument("incidents", help="Path to incidents.json")
@@ -83,6 +95,8 @@ def main() -> int:
         "transaction-boundaries": run_transactions,
         "log-mining": run_logs,
         "incident-clustering": run_incidents,
+        "data-lineage": run_lineage,
+        "error-codes": run_errors,
     }
 
     return commands[args.command](args)
