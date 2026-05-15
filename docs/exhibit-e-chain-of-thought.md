@@ -58,6 +58,7 @@ Incidents are the system telling you where it hurts. Individual incidents are de
 - **Many incidents involve more than 2 services.** A cascading failure might touch 5 services. Tag the PRIMARY boundary where the failure originated, not every service affected by the cascade. The origin point is the architectural signal
 - **"Root cause: unknown"** is common in legacy systems. If the root cause isn't documented, look at the resolution: "restarted Service A" tells you Service A was involved. "Manually synchronized data between Service A and Service B" tells you the boundary
 - **Some incidents are genuinely internal** — a memory leak, a bad deployment, a data migration error. These don't indicate boundary problems. Separate them clearly
+- **Cascade attribution is the hardest tagging problem.** When a Carrier Integration timeout causes a Shipment Service error that causes a customer-facing failure — the incident is tagged to whatever the customer saw. Back-trace the cascade: the PRIMARY boundary is where the first failure originated, not where the customer felt it. This requires reading the timeline in post-mortems, not just the title and resolution
 
 **Output:** Tagged incident list with boundary annotations
 
