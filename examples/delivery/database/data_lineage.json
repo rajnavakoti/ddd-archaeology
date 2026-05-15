@@ -1,0 +1,78 @@
+{
+  "entity": "delivery_address",
+  "source": {
+    "table": "customer_addresses",
+    "service": "Consignee Service",
+    "format": "normalized_columns",
+    "fields": ["street_address", "apartment_unit", "city", "state_province", "zip_code", "country_code", "label", "is_default", "phone_number"],
+    "update_policy": "customer_managed",
+    "field_count": 9
+  },
+  "copies": [
+    {
+      "id": "copy_1",
+      "table": "orders.shipping_address",
+      "service": "Shipment Service",
+      "format": "json_blob",
+      "fields": ["name", "street", "city", "postcode", "country"],
+      "copied_at": "order_creation",
+      "update_policy": "never",
+      "field_count": 5,
+      "notes": "JSON blob in TEXT column. Snapshot at order time, never refreshed."
+    },
+    {
+      "id": "copy_2",
+      "table": "shipments.delivery_address",
+      "service": "Carrier Integration Service",
+      "format": "normalized_columns",
+      "fields": ["street", "street2", "city", "state_province", "postal", "country_code", "delivery_notes", "access_code", "is_residential"],
+      "copied_at": "shipment_creation",
+      "update_policy": "mutable_before_dispatch",
+      "field_count": 9,
+      "notes": "Can be updated if customer calls before dispatch. Independent of source."
+    },
+    {
+      "id": "copy_3",
+      "table": "invoices.billing_address",
+      "service": "Invoicing Service",
+      "format": "concatenated_text",
+      "fields": ["full_address_string"],
+      "copied_at": "invoice_generation",
+      "update_policy": "never",
+      "field_count": 1,
+      "notes": "Single formatted TEXT field. Lossy — cannot be parsed back. Legal document, immutable."
+    },
+    {
+      "id": "copy_4",
+      "table": "analytics.dim_customer_address",
+      "service": "Data Warehouse",
+      "format": "scd_type_2",
+      "fields": ["street_address", "city", "state_province", "zip_code", "country_code", "valid_from", "valid_to"],
+      "copied_at": "nightly_etl",
+      "update_policy": "daily_batch",
+      "field_count": 7,
+      "notes": "SCD Type 2 versioned. Has full history. Nightly ETL, always 1 day behind."
+    }
+  ],
+  "consistency_check": {
+    "window_days": 90,
+    "total_orders_checked": 12034,
+    "mismatches": {
+      "total": 342,
+      "expected_snapshot_divergence": 200,
+      "unexpected_missing_propagation": 142,
+      "details": [
+        {"type": "postcode_mismatch", "count": 89, "between": ["Shipment Service", "Carrier Integration Service"]},
+        {"type": "street_mismatch", "count": 53, "between": ["Shipment Service", "Carrier Integration Service"]},
+        {"type": "city_mismatch", "count": 12, "between": ["Shipment Service", "Carrier Integration Service"]},
+        {"type": "format_incompatible", "count": 142, "between": ["Invoicing Service", "all"], "notes": "Cannot compare — concatenated text format"},
+        {"type": "etl_lag", "count": 46, "between": ["Consignee Service", "Data Warehouse"], "notes": "Expected — nightly sync"}
+      ]
+    }
+  },
+  "missing_events": [
+    {"event": "DeliveryAddressChanged", "reason": "Carrier updates address independently without notifying source"},
+    {"event": "AddressVerified", "reason": "Carrier geocoding validates address but result not propagated"},
+    {"event": "AddressSnapshotTaken", "reason": "Order creation copies address but no event marks the snapshot point"}
+  ]
+}
