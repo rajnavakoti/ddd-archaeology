@@ -14,6 +14,7 @@ from ddd_archaeology.phases.log_mining import run as run_logs
 from ddd_archaeology.phases.incident_clustering import run as run_incidents
 from ddd_archaeology.phases.data_lineage import run as run_lineage
 from ddd_archaeology.phases.error_codes import run as run_errors
+from ddd_archaeology.phases.change_velocity import run as run_velocity
 
 
 def main() -> int:
@@ -68,6 +69,11 @@ def main() -> int:
     p_logs.add_argument("--frequency", default=None, help="Path to event_frequency.json")
     p_logs.add_argument("--output", "-o", default="output/log_mining.json", help="Output path")
 
+    # Exhibit H: change-velocity
+    p_velocity = sub.add_parser("change-velocity", help="Exhibit H — analyze git co-change coupling")
+    p_velocity.add_argument("co_changes", help="Path to co_changes.json")
+    p_velocity.add_argument("--output", "-o", default="output/change_velocity.json", help="Output path")
+
     # Exhibit G: error-codes
     p_errors = sub.add_parser("error-codes", help="Exhibit G — decode error codes into business rules")
     p_errors.add_argument("errors", help="Path to error_codes.json")
@@ -97,6 +103,7 @@ def main() -> int:
         "incident-clustering": run_incidents,
         "data-lineage": run_lineage,
         "error-codes": run_errors,
+        "change-velocity": run_velocity,
     }
 
     return commands[args.command](args)
