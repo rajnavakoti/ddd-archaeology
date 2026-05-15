@@ -35,9 +35,12 @@ git log --since="6 months ago" --pretty=format:"COMMIT:%H" --name-only \
 
 # Simplified: list all co-changing file pairs
 git log --since="6 months ago" --name-only --pretty=format:"---" \
-  | awk '/^---$/{if(NR>1) for(i in files) for(j in files)
-    if(i<j) print files[i]" + "files[j]; delete files; next}
-    {files[NR]=$0}' \
+  | awk '/^---$/{
+      for(i in files) for(j in files)
+        if(i < j) print i" + "j
+      delete files; next
+    }
+    NF{files[$0]=1}' \
   | sort | uniq -c | sort -rn | head -30
 ```
 
@@ -47,6 +50,7 @@ git log --since="6 months ago" --name-only --pretty=format:"---" \
 - **Exclude generated files.** Auto-generated code, lock files, build artifacts add noise
 - **Monorepo vs multi-repo:** In a monorepo, the technique works directly. In multi-repo, co-change happens across separate repos — you need to correlate PRs that were opened/merged in the same time window for the same feature. This is harder but the signal is the same
 - **Developer behavior affects the data.** Some developers make small, focused commits (better signal). Others batch everything into one big commit (noisier). Normalize by looking at patterns across many developers, not just one
+- **Commit messages explain the coupling.** Filter for commits where the message references both service domains (e.g., "order" AND "shipment" in the same message) — these are intentional co-changes, architectural decisions. Commits touching the same files with infrastructure-language messages ("fix tests", "merge conflict", "bump version") are noise. The ratio of intentional to accidental co-changes tells you how much of the coupling is designed vs accidental
 
 **Output:** Commit-to-file mapping, filtered and cleaned
 
