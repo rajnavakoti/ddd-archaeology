@@ -180,22 +180,51 @@ def analyze_coupling(entities: list[EntityInfo]) -> CouplingResult:
     return result
 
 
-# Known ID field → likely service mappings
+# Known ID field → likely service mappings.
+# These are HINTS for common domain patterns across industries — not hard requirements.
+# The resolver falls back to schema-based matching when no hint matches.
+# To extend for your domain: add entries here or (better) rely on the schema-based
+# fallback which works for any domain without modification.
 _ID_SERVICE_HINTS: dict[str, list[str]] = {
-    "buyerId": ["Consignee", "Customer", "customer"],
-    "customerId": ["Consignee", "Customer", "customer"],
-    "userId": ["Consignee", "Customer", "customer", "User"],
-    "recipientId": ["Consignee", "Customer", "customer"],
-    "accountId": ["Consignee", "Customer", "customer", "Invoicing", "Billing", "Account"],
-    "orderId": ["Shipment", "Order"],
-    "warehouseId": ["Inventory", "Warehouse"],
-    "carrierId": ["Carrier", "Shipping", "Delivery"],
+    # Common across all domains
+    "customerId": ["Customer", "Consignee", "client", "CRM"],
+    "userId": ["Customer", "User", "Identity", "IAM"],
+    "accountId": ["Customer", "Account", "Billing", "Invoicing"],
+    "orderId": ["Order", "Shipment", "Sales", "Commerce"],
+    "invoiceId": ["Invoicing", "Billing", "Finance", "Invoice"],
+    "paymentId": ["Payment", "Billing", "Finance", "Invoicing"],
+    "productId": ["Product", "Catalog", "Inventory"],
+    # Logistics / delivery
+    "buyerId": ["Customer", "Consignee", "Commerce"],
+    "recipientId": ["Customer", "Consignee", "Delivery"],
+    "warehouseId": ["Inventory", "Warehouse", "Fulfilment"],
+    "carrierId": ["Carrier", "Shipping", "Delivery", "Logistics"],
     "shipmentId": ["Carrier", "Shipping", "Shipment", "Delivery"],
-    "trackingNumber": ["Carrier", "Shipping", "Delivery"],
-    "invoiceId": ["Invoicing", "Billing", "Invoice"],
-    "paymentId": ["Invoicing", "Billing", "Payment"],
-    "productId": ["Inventory", "Product", "Catalog"],
-    "reservationId": ["Inventory", "Reservation"],
+    "trackingNumber": ["Carrier", "Shipping", "Delivery", "Tracking"],
+    "reservationId": ["Inventory", "Reservation", "Booking"],
+    # Healthcare
+    "patientId": ["Patient", "Clinical", "Registration", "EHR"],
+    "appointmentId": ["Scheduling", "Appointment", "Clinical"],
+    "prescriptionId": ["Pharmacy", "Prescription", "Clinical"],
+    "providerId": ["Provider", "Staff", "Clinical"],
+    "claimId": ["Claims", "Billing", "Insurance"],
+    # Fintech / banking
+    "transactionId": ["Transaction", "Ledger", "Payment", "Core Banking"],
+    "loanId": ["Lending", "Loan", "Credit"],
+    "merchantId": ["Merchant", "Acquiring", "Commerce"],
+    "beneficiaryId": ["Payment", "Transfer", "Wire"],
+    # E-commerce
+    "cartId": ["Cart", "Checkout", "Commerce"],
+    "catalogId": ["Catalog", "Product", "Merchandising"],
+    "reviewId": ["Review", "Rating", "Content"],
+    "promotionId": ["Promotion", "Marketing", "Pricing"],
+    # Education
+    "studentId": ["Student", "Enrollment", "Registration"],
+    "courseId": ["Course", "Curriculum", "Academic"],
+    "enrollmentId": ["Enrollment", "Registration", "Academic"],
+    # Insurance
+    "policyId": ["Policy", "Underwriting", "Insurance"],
+    "claimId": ["Claims", "Adjudication", "Insurance"],
 }
 
 

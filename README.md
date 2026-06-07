@@ -51,23 +51,48 @@ The `examples/delivery/` directory contains a synthetic delivery platform domain
 ```
 ddd-archaeology/
 ├── docs/
-│   ├── chain-of-thought.md       # Full reasoning process
-│   └── exhibit-a-qa-draft.md     # 35 battle-tested Q&A answers
+│   ├── chain-of-thought.md             # Full reasoning process (8 phases)
+│   ├── exhibit-*-chain-of-thought.md   # Deep reasoning per exhibit (B-H)
+│   └── forensic-ddd-checklist.md       # Decision framework
 ├── examples/
-│   └── delivery/                 # Synthetic contracts with embedded signals
-│       ├── shipment-service.openapi.yaml
-│       ├── consignee-service.openapi.yaml
-│       ├── inventory-service.openapi.yaml
-│       ├── carrier-service.openapi.yaml
-│       ├── invoicing-service.openapi.yaml
-│       ├── tracking-notifications.openapi.yaml
-│       ├── shipment-events.asyncapi.yaml
-│       ├── carrier-events.asyncapi.yaml
-│       └── tracking-portal.graphql
-├── src/ddd_archaeology/          # Automation scripts (Phases 1-6)
-├── .claude/skills/               # Agent skills (Phases 7-8)
-└── .claude/rules/                # DDD reasoning conventions
+│   └── delivery/                       # Synthetic delivery platform
+│       ├── *.openapi.yaml              # 6 OpenAPI specs
+│       ├── *.asyncapi.yaml             # 2 AsyncAPI event specs
+│       ├── *.graphql                   # 1 GraphQL BFF
+│       ├── database/                   # DB schema, access logs, transactions
+│       ├── logs/                       # Sample traces, event frequencies
+│       ├── incidents/                  # Incident history
+│       ├── errors/                     # Error code catalog
+│       └── git/                        # Co-change data
+├── src/ddd_archaeology/                # CLI tools (all 12 phases)
+├── tests/                              # 120 tests
+├── .claude/skills/                     # Agent skills (orchestration + interpretation)
+└── .claude/rules/                      # DDD reasoning conventions
 ```
+
+## Quick Start — Your Own System
+
+The toolkit works with **any domain** — the delivery example is just a demonstration. To analyze your own system:
+
+```bash
+# 1. Install
+pip install -e .
+
+# 2. Point at your contracts (OpenAPI, AsyncAPI, and/or GraphQL files)
+python -m ddd_archaeology collect ./path/to/your/specs/ -o output/inventory.json
+
+# 3. Run the pipeline
+python -m ddd_archaeology extract-vocab output/inventory.json -o output/vocabulary.json
+python -m ddd_archaeology discover-entities output/inventory.json -o output/entities.json
+python -m ddd_archaeology compare output/entities.json -o output/comparison.json
+python -m ddd_archaeology analyze-coupling output/entities.json -o output/coupling.json --html output/heatmap.html
+```
+
+**What you need:** Any combination of OpenAPI (`.yaml`/`.json`), AsyncAPI (`.yaml`), or GraphQL (`.graphql`) spec files. The more services you include, the richer the coupling analysis.
+
+**Extended exhibits (B-H):** If you have database schemas, transaction logs, incident data, error codes, or git history — you can run additional exhibits for deeper analysis. See `examples/delivery/` for the expected data formats.
+
+**No code changes required.** The analysis is structural — it works by comparing schemas, tracing ID references, and measuring coupling patterns regardless of your industry (logistics, healthcare, fintech, e-commerce, etc.).
 
 ## Who Is This For?
 
