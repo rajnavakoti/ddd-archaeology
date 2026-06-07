@@ -3,6 +3,18 @@ docs/exhibit-*-story-script.md
 docs/conclusion-story-script.md
 docs/exhibit-*-qa-draft.md
 docs/exhibit-*-qa-*.md
+docs/slides-*.md
+docs/reading-notes-*.md
+docs/reading\ notes/
+docs/reading\ notes
+docs/slide-planning-notes.md
+docs/artifact-progression.md
+docs/exhibit-scene-breakdown.md
+docs/exhibit-slides-spec.md
+
+# Media
+*.mov
+*.mp4
 
 # Generated output (root level only)
 /output/
